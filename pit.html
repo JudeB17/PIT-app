@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PIT">
+<meta name="theme-color" content="#0C0904">
+<title>PIT — Mental Math & Quant Drills</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root{
+  --bg:#0C0904; --panel:#151006; --panel2:#1D1609; --line:#2C2211;
+  --amber:#FFB000; --amber-hi:#FFCE54; --dim:#9C8B5E; --faint:#5E5133;
+  --ink:#EFE3C2; --up:#3FBF7F; --down:#E5484D;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--mono);height:100%;overscroll-behavior:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#root{min-height:100%;display:flex;flex-direction:column}
+button{font-family:var(--mono);color:inherit;background:none;border:none;cursor:pointer}
+input,select{font-family:var(--mono);font-size:16px;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;outline:none}
+input:focus{border-color:var(--amber)}
+.app{flex:1;display:flex;flex-direction:column;max-width:560px;width:100%;margin:0 auto;padding-top:env(safe-area-inset-top)}
+.screen{flex:1;overflow-y:auto;padding:14px 14px 90px 14px}
+.eyebrow{font-size:10px;letter-spacing:.22em;color:var(--faint);text-transform:uppercase}
+.h1{font-size:20px;font-weight:800;letter-spacing:.04em;color:var(--amber);margin:2px 0 14px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+.card.tap:active{background:var(--panel2)}
+.cardtitle{font-size:15px;font-weight:700;color:var(--ink)}
+.cardsub{font-size:11px;color:var(--dim);margin-top:4px;line-height:1.5}
+.row{display:flex;align-items:center;gap:8px}
+.spread{display:flex;align-items:center;justify-content:space-between}
+.tag{font-size:10px;letter-spacing:.14em;color:var(--amber);border:1px solid var(--line);border-radius:4px;padding:2px 6px}
+.btn{display:block;width:100%;text-align:center;background:var(--amber);color:#181000;font-weight:800;font-size:14px;letter-spacing:.06em;border-radius:8px;padding:13px;text-transform:uppercase}
+.btn:active{background:var(--amber-hi)}
+.btn.ghost{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+.btn.small{padding:9px;font-size:12px}
+.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(12,9,4,.96);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);backdrop-filter:blur(8px);z-index:20}
+.tabbar-inner{display:flex;width:100%;max-width:560px;margin:0 auto}
+.tab{flex:1;padding:12px 0 10px;text-align:center;font-size:10px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+.tab.on{color:var(--amber)}
+.tab .dot{display:block;width:4px;height:4px;border-radius:2px;background:transparent;margin:4px auto 0}
+.tab.on .dot{background:var(--amber)}
+/* tape */
+.tape{display:flex;gap:5px;overflow-x:hidden;padding:8px 0;border-bottom:1px solid var(--line);justify-content:flex-end}
+.tick{flex:0 0 auto;font-size:12px;line-height:1}
+.tick.up{color:var(--up)} .tick.down{color:var(--down)} .tick.flat{color:var(--faint)}
+/* session */
+.sess{flex:1;display:flex;flex-direction:column;padding:0 16px 16px;max-width:560px;width:100%;margin:0 auto}
+.sesshead{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 4px}
+.clock{font-size:22px;font-weight:800;color:var(--amber);text-shadow:0 0 14px rgba(255,176,0,.35)}
+.clock.low{color:var(--down);text-shadow:0 0 14px rgba(229,72,77,.4)}
+.score{font-size:13px;color:var(--dim)}
+.qzone{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px;min-height:220px}
+.qtext{font-size:38px;font-weight:800;letter-spacing:.02em;text-align:center;color:var(--ink)}
+.qtext small{font-size:22px;color:var(--dim)}
+.ansin{width:200px;text-align:center;font-size:26px;font-weight:700;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--amber)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 8px;font-size:20px;font-weight:700;color:var(--ink)}
+.opt:active{border-color:var(--amber)}
+.skip{color:var(--faint);font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:10px}
+/* results */
+.bigscore{font-size:56px;font-weight:800;color:var(--amber);text-shadow:0 0 20px rgba(255,176,0,.35);text-align:center;margin:16px 0 2px}
+.statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center}
+.stat .v{font-size:18px;font-weight:800;color:var(--ink)}
+.stat .k{font-size:9px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin-top:3px}
+/* bank */
+.qdot{width:8px;height:8px;border-radius:4px;background:var(--line);flex:0 0 auto}
+.qdot.ok{background:var(--up)} .qdot.bad{background:var(--down)}
+.prompt{font-size:16px;line-height:1.6;color:var(--ink);margin:6px 0 14px}
+.sol{border-left:2px solid var(--amber);padding:10px 12px;background:var(--panel2);border-radius:0 8px 8px 0;font-size:13px;line-height:1.65;color:var(--ink);margin-top:12px}
+.sol b{color:var(--amber)}
+.verdict{font-size:13px;font-weight:700;margin-top:10px}
+.verdict.ok{color:var(--up)} .verdict.bad{color:var(--down)}
+.mcopt{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;margin-bottom:8px;color:var(--ink)}
+.mcopt.right{border-color:var(--up);color:var(--up)}
+.mcopt.wrongpick{border-color:var(--down);color:var(--down)}
+/* charts */
+.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+.charttitle{font-size:10px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase;margin-bottom:8px}
+.barrow{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px}
+.barlabel{width:44px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
+.bartrack{flex:1;height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}
+.barfill{height:100%;background:var(--amber);border-radius:4px}
+.barval{width:64px;text-align:right;color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border:1px solid var(--line);border-radius:14px;padding:5px 11px}
+.chip.on{color:var(--amber);border-color:var(--amber)}
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}
+.setrow:last-child{border-bottom:none}
+.rangein{width:58px;text-align:center;padding:6px}
+.switch{width:42px;height:24px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);position:relative}
+.switch.on{background:rgba(255,176,0,.25);border-color:var(--amber)}
+.knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:9px;background:var(--faint);transition:left .15s}
+.switch.on .knob{left:20px;background:var(--amber)}
+.empty{color:var(--faint);font-size:12px;text-align:center;padding:30px 0;line-height:1.7}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useMemo} = React;
+
+/* ---------------- storage ---------------- */
+const LS = "pit_v1";
+const DEFAULTS = {
+  settings:{
+    sprintDur:120,
+    ops:{add:true,sub:true,mul:true,div:true},
+    addA:[2,100], addB:[2,100], mulA:[2,12], mulB:[2,100],
+    custom:{op:"mul",dA:2,dB:3,mode:"time",dur:120,count:20}
+  },
+  sessions:[], bank:{}
+};
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS);
+    if(!raw) return JSON.parse(JSON.stringify(DEFAULTS));
+    const s = JSON.parse(raw);
+    return {...JSON.parse(JSON.stringify(DEFAULTS)), ...s,
+      settings:{...JSON.parse(JSON.stringify(DEFAULTS.settings)), ...(s.settings||{}),
+        ops:{...DEFAULTS.settings.ops, ...((s.settings||{}).ops||{})},
+        custom:{...DEFAULTS.settings.custom, ...((s.settings||{}).custom||{})}}};
+  }catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+function saveState(st){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} }
+
+/* ---------------- utils ---------------- */
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmtN=n=>{
+  if(!isFinite(n)) return "∞";
+  const r = Math.round(n*100)/100;
+  return (Math.abs(r)>=1000 && Number.isInteger(r)) ? r.toLocaleString("en-US") : String(r);
+};
+const fmtClock=s=>{s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60);return m+":"+String(s%60).padStart(2,"0");};
+function parseAns(str){
+  if(str==null) return NaN;
+  str = String(str).trim().replace(/,/g,"");
+  const f = str.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if(f) return parseFloat(f[1])/parseFloat(f[2]);
+  const p = str.match(/^(-?\d+(?:\.\d+)?)\s*%$/);
+  if(p) return parseFloat(p[1])/100;
+  return parseFloat(str);
+}
+function numMatch(givenStr, ans){
+  const v = parseAns(givenStr);
+  if(isNaN(v)) return false;
+  const hit = x=>{
+    if(Number.isInteger(ans)) return Math.abs(x-ans) < 1e-9;
+    return Math.abs(x-ans) <= Math.max(Math.abs(ans)*0.01, 1e-9);
+  };
+  return hit(v) || hit(v/100) || hit(v*100);
+}
+
+/* ---------------- generators ---------------- */
+function genSprint(s){
+  const enabled = ["add","sub","mul","div"].filter(o=>s.ops[o]);
+  const op = pick(enabled.length?enabled:["add"]);
+  let x,y;
+  if(op==="add"||op==="sub"){ x=rnd(s.addA[0],s.addA[1]); y=rnd(s.addB[0],s.addB[1]); }
+  else { x=rnd(s.mulA[0],s.mulA[1]); y=rnd(s.mulB[0],s.mulB[1]); }
+  if(op==="add") return {text:x+" + "+y, ans:x+y, op};
+  if(op==="sub") return {text:(x+y)+" − "+x, ans:y, op};
+  if(op==="mul") return {text:x+" × "+y, ans:x*y, op};
+  return {text:(x*y)+" ÷ "+x, ans:y, op};
+}
+function digitsRange(d){ return d<=1 ? [2,9] : [Math.pow(10,d-1), Math.pow(10,d)-1]; }
+function genCustom(c){
+  const [a1,a2]=digitsRange(c.dA), [b1,b2]=digitsRange(c.dB);
+  let x=rnd(a1,a2), y=rnd(b1,b2);
+  if(c.op==="add") return {text:x+" + "+y, ans:x+y, op:"add"};
+  if(c.op==="sub"){ if(y>x){const t=x;x=y;y=t;} return {text:x+" − "+y, ans:x-y, op:"sub"}; }
+  if(c.op==="mul") return {text:x+" × "+y, ans:x*y, op:"mul"};
+  return {text:(x*y)+" ÷ "+y, ans:x, op:"div"};
+}
+function distractors(ans){
+  const out=new Set(); const isInt=Number.isInteger(ans);
+  const cands=[];
+  const mag=Math.max(1,Math.pow(10,Math.floor(Math.log10(Math.abs(ans)||1))-1));
+  [1,2,10,mag,mag*2].forEach(d=>{cands.push(ans+d,ans-d);});
+  cands.push(ans*1.1, ans*0.9, ans+100, ans-100);
+  const ds=String(Math.abs(Math.round(ans)));
+  if(ds.length>=2){
+    const i=rnd(0,ds.length-2);
+    const sw=ds.slice(0,i)+ds[i+1]+ds[i]+ds.slice(i+2);
+    cands.push(parseInt(sw,10)*Math.sign(ans||1));
+  }
+  for(const c of cands){
+    let v=isInt?Math.round(c):Math.round(c*100)/100;
+    if(v!==ans && isFinite(v) && !out.has(v) && (isInt? v> -1000000 : true)) out.add(v);
+    if(out.size>=8) break;
+  }
+  const arr=[...out];
+  while(arr.length<3) arr.push(ans+arr.length+3);
+  // pick 3
+  const chosen=[];
+  while(chosen.length<3 && arr.length){ const i=Math.floor(Math.random()*arr.length); chosen.push(arr.splice(i,1)[0]); }
+  return chosen;
+}
+function genEighty(){
+  const type=pick(["add","add","sub","mul","mul","div","dec","pct","frac","sq"]);
+  let text,ans,op;
+  if(type==="add"){ const x=rnd(25,999),y=rnd(25,999); text=x+" + "+y; ans=x+y; op="add"; }
+  else if(type==="sub"){ const x=rnd(25,999),y=rnd(25,999); const hi=Math.max(x,y),lo=Math.min(x,y); text=hi+" − "+lo; ans=hi-lo; op="sub"; }
+  else if(type==="mul"){ const x=rnd(11,99),y=rnd(3,29); text=x+" × "+y; ans=x*y; op="mul"; }
+  else if(type==="div"){ const y=rnd(3,19),q=rnd(11,99); text=(y*q)+" ÷ "+y; ans=q; op="div"; }
+  else if(type==="dec"){ const x=rnd(11,99)/10, y=rnd(3,29); ans=Math.round(x*y*100)/100; text=x+" × "+y; op="mul"; }
+  else if(type==="pct"){ const p=pick([5,10,15,20,25,40,50,75]); const n=rnd(2,50)*20; text=p+"% of "+n; ans=Math.round(n*p)/100; op="mul"; }
+  else if(type==="frac"){ const fr=pick([[1,2],[1,3],[1,4],[2,3],[3,4],[2,5]]); const n=rnd(2,40)*fr[1]; text=fr[0]+"/"+fr[1]+" of "+n; ans=n*fr[0]/fr[1]; op="div"; }
+  else { const x=rnd(12,25); text=x+"²"; ans=x*x; op="mul"; }
+  const opts=[ans,...distractors(ans)];
+  // shuffle
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  return {text,ans,op,opts};
+}
+
+/* ---------------- question bank ---------------- */
+const CATS=[
+  {id:"prob",name:"Probability"},
+  {id:"comb",name:"Combinatorics"},
+  {id:"ev",name:"Expected Value & Games"},
+  {id:"bayes",name:"Bayes & Conditioning"},
+  {id:"dist",name:"Distributions & Stats"},
+  {id:"markov",name:"Markov & Processes"},
+  {id:"teaser",name:"Brainteasers & Markets"},
+  {id:"fin",name:"Finance & Options"}
+];
+const BANK=[
+/* Probability */
+{id:"p1",cat:"prob",fmt:"num",q:"Two fair dice are rolled. P(sum = 7)?",ans:1/6,disp:"1/6 ≈ 0.167",
+ sol:"Of 36 equally likely ordered pairs, six sum to 7: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1). 6/36 = 1/6. Note 7 is the most likely sum — every first roll leaves exactly one completing second roll."},
+{id:"p2",cat:"prob",fmt:"num",q:"A die is rolled four times. P(at least one 6)?",ans:1-Math.pow(5/6,4),disp:"1 − (5/6)⁴ ≈ 0.518",
+ sol:"Complement: P(no 6 in 4 rolls) = (5/6)⁴ = 625/1296 ≈ 0.482, so P(≥1 six) ≈ 0.518. This is de Méré's problem — barely a favorable bet."},
+{id:"p3",cat:"prob",fmt:"mc",q:"Minimum number of people in a room so that P(two share a birthday) exceeds 50%?",opts:["22","23","30","183"],ans:1,
+ sol:"With n people, P(all distinct) = 365/365 · 364/365 · … · (365−n+1)/365. At n = 23 this falls to ≈ 0.493. Intuition: 23 people give C(23,2) = 253 pairs, each a 1/365 chance of colliding."},
+{id:"p4",cat:"prob",fmt:"num",q:"Draw 3 cards from a standard 52-card deck. P(all three are hearts)?",ans:11/850,disp:"11/850 ≈ 0.0129",
+ sol:"Sequential: 13/52 · 12/51 · 11/50 = 11/850 ≈ 1.29%. Equivalent to C(13,3)/C(52,3)."},
+{id:"p5",cat:"prob",fmt:"open",q:"Flip a fair coin until the first head. What is the probability the total number of flips is even?",disp:"1/3",
+ sol:"P(N = k) = (1/2)ᵏ. Sum over even k: (1/2)² + (1/2)⁴ + … = (1/4)/(1 − 1/4) = <b>1/3</b>. Sanity check: odd outcomes get 2/3 because N = 1 alone carries probability 1/2."},
+{id:"p6",cat:"prob",fmt:"num",q:"Four letters are randomly placed into four addressed envelopes. P(no letter ends up in its own envelope)?",ans:9/24,disp:"9/24 = 0.375",
+ sol:"Derangements: D₄ = 9 of 4! = 24 permutations, so 9/24 = 3/8. In general Dₙ/n! → 1/e ≈ 0.368 — worth memorizing for interviews."},
+{id:"p7",cat:"prob",fmt:"mc",q:"Three fair coins are tossed. P(exactly two heads)?",opts:["1/4","3/8","1/2","5/8"],ans:1,
+ sol:"C(3,2) = 3 favorable outcomes of 8: HHT, HTH, THH. 3/8."},
+{id:"p8",cat:"prob",fmt:"open",q:"A stick is broken at two points chosen uniformly at random. Probability the three pieces can form a triangle?",disp:"1/4",
+ sol:"A triangle exists iff no piece exceeds 1/2. With break points X, Y uniform on the unit square, each of the three 'one piece too long' regions has area 1/4 but only the valid region — {both breaks on opposite sides of 1/2 and |X−Y| < 1/2} — survives, with total area <b>1/4</b>."},
+/* Combinatorics */
+{id:"c1",cat:"comb",fmt:"num",q:"How many distinct arrangements of the letters in MISSISSIPPI?",ans:34650,disp:"34,650",
+ sol:"11 letters with repeats: 11!/(4!·4!·2!) for the four I's, four S's, two P's = 39,916,800/1,152 = 34,650."},
+{id:"c2",cat:"comb",fmt:"num",q:"How many committees of 3 can be formed from 10 people?",ans:120,disp:"C(10,3) = 120",
+ sol:"C(10,3) = 10·9·8/3! = 120. Order doesn't matter, so divide the 720 ordered picks by 3! = 6."},
+{id:"c3",cat:"comb",fmt:"mc",q:"Lattice paths from (0,0) to (4,4) using only unit steps right or up?",opts:["16","64","70","256"],ans:2,
+ sol:"Any path is 8 steps, 4 of which are 'right': C(8,4) = 70."},
+{id:"c4",cat:"comb",fmt:"num",q:"How many subsets does a 10-element set have (including the empty set)?",ans:1024,disp:"2¹⁰ = 1,024",
+ sol:"Each element is in or out independently: 2¹⁰ = 1,024."},
+{id:"c5",cat:"comb",fmt:"num",q:"20 people each shake hands with every other person exactly once. Total handshakes?",ans:190,disp:"C(20,2) = 190",
+ sol:"C(20,2) = 20·19/2 = 190."},
+{id:"c6",cat:"comb",fmt:"num",q:"How many ways can 5 people sit at a round table, if rotations count as the same seating?",ans:24,disp:"4! = 24",
+ sol:"Fix one person to kill the rotational symmetry; arrange the other four: 4! = 24."},
+{id:"c7",cat:"comb",fmt:"mc",q:"How many ways to split 10 people into two unlabeled teams of 5?",opts:["120","126","210","252"],ans:1,
+ sol:"C(10,5) = 252 counts each split twice (team A vs team B is the same partition), so 252/2 = 126."},
+{id:"c8",cat:"comb",fmt:"open",q:"How many trailing zeros does 100! have?",disp:"24",
+ sol:"Trailing zeros come from factors of 10 = 2·5, and 5s are the bottleneck: ⌊100/5⌋ + ⌊100/25⌋ = 20 + 4 = <b>24</b>."},
+/* Expected value */
+{id:"e1",cat:"ev",fmt:"num",q:"Expected value of a single fair die roll?",ans:3.5,disp:"3.5",
+ sol:"(1+2+3+4+5+6)/6 = 21/6 = 3.5. The anchor number for a huge family of dice games."},
+{id:"e2",cat:"ev",fmt:"num",q:"Expected number of rolls of a fair die to see the first 6?",ans:6,disp:"6",
+ sol:"Geometric with p = 1/6: E[N] = 1/p = 6."},
+{id:"e3",cat:"ev",fmt:"open",q:"Expected number of fair coin flips to see HH (two heads in a row)?",disp:"6",
+ sol:"States: S (no progress), H (one head). E_H = 1 + ½·0 + ½·E_S and E_S = 1 + ½·E_S + ½·E_H. Substituting: E_S = 1.5 + ¾·E_S ⟹ E_S = <b>6</b>. For contrast, HT takes only 4 — HT can't 'waste' progress the way HH does."},
+{id:"e4",cat:"ev",fmt:"num",q:"You roll a die and are paid its face value, with the option of one reroll (keeping the second result). EV under optimal play?",ans:4.25,disp:"4.25",
+ sol:"The reroll is worth 3.5, so keep any first roll above that: keep 4, 5, 6 (avg 5, prob ½), reroll otherwise (EV 3.5, prob ½). EV = ½·5 + ½·3.5 = 4.25. With two rerolls it rises to ≈ 4.67 — the threshold logic is the interview point."},
+{id:"e5",cat:"ev",fmt:"mc",q:"A game pays 2ⁿ where n is the number of flips until the first head (inclusive). Its expected value is:",opts:["2","4","e","Infinite"],ans:3,
+ sol:"E = Σ (1/2)ⁿ·2ⁿ = Σ 1 = ∞. The St. Petersburg paradox — the follow-up is why nobody pays much to play: log utility, bankroll limits, and the counterparty's finite capital."},
+{id:"e6",cat:"ev",fmt:"num",q:"Expected number of die rolls to see all six faces at least once (coupon collector)?",ans:14.7,disp:"6·H₆ = 14.7",
+ sol:"Each new face is geometric: 6/6 + 6/5 + 6/4 + 6/3 + 6/2 + 6/1 = 6(1 + ½ + ⅓ + ¼ + ⅕ + ⅙) = 14.7."},
+{id:"e7",cat:"ev",fmt:"open",q:"100 passengers board a full flight. The first sits in a random seat; everyone else takes their own seat if free, otherwise a random free one. P(the last passenger gets their own seat)?",disp:"1/2",
+ sol:"At every 'random choice' moment, seat 1 and seat 100 are symmetric — whoever chooses randomly is equally likely to pick either, and picking any other seat just defers the same situation. The process ends when someone takes seat 1 or seat 100, each with probability <b>1/2</b>."},
+{id:"e8",cat:"ev",fmt:"num",q:"Expected value of the maximum of two fair dice?",ans:161/36,disp:"161/36 ≈ 4.47",
+ sol:"P(max = m) = (2m − 1)/36. E = Σ m(2m−1)/36 = (1+6+15+28+45+66)/36 = 161/36 ≈ 4.47. Quick alternative: E[max] = Σₘ P(max ≥ m)."},
+/* Bayes */
+{id:"b1",cat:"bayes",fmt:"num",q:"A disease has 1% prevalence. A test is 99% sensitive and 99% specific. P(disease | positive test)?",ans:0.5,disp:"0.5",
+ sol:"Per 10,000 people: 100 sick → 99 true positives; 9,900 healthy → 99 false positives. 99/(99+99) = <b>50%</b>. Base rates dominate when prevalence is low."},
+{id:"b2",cat:"bayes",fmt:"open",q:"Monty Hall: you pick a door, the host (who knows) opens a different door revealing a goat, and offers a switch. Do you switch?",disp:"Switch — 2/3",
+ sol:"Your first pick is right with probability 1/3, and the host's reveal transfers the remaining 2/3 onto the other closed door. Switching wins <b>2/3</b> of the time. The load-bearing assumption: the host always opens a goat door — if he opens doors at random and happened to show a goat, switching is only 1/2."},
+{id:"b3",cat:"bayes",fmt:"num",q:"A family has two children. Given that at least one is a boy, P(both are boys)?",ans:1/3,disp:"1/3",
+ sol:"Equally likely orderings: BB, BG, GB, GG. Conditioning on 'at least one boy' leaves {BB, BG, GB}, so 1/3. Contrast with 'the elder is a boy', which gives 1/2 — the conditioning event matters."},
+{id:"b4",cat:"bayes",fmt:"num",q:"Two coins: one fair, one double-headed. You pick one at random and flip three heads. P(you hold the double-headed coin)?",ans:8/9,disp:"8/9 ≈ 0.889",
+ sol:"Bayes: posterior odds = prior odds × likelihood ratio = 1 × (1 / (1/8)) = 8:1, so 8/9."},
+{id:"b5",cat:"bayes",fmt:"mc",q:"Roll two dice. P(sum = 8 | first die shows 3)?",opts:["1/6","5/36","1/8","1/3"],ans:0,
+ sol:"Given the first is 3, the sum is 8 iff the second shows 5: 1/6. The unconditional P(sum = 8) = 5/36 is the distractor."},
+{id:"b6",cat:"bayes",fmt:"open",q:"A family has two children. One of them is a boy born on a Tuesday. P(both are boys)?",disp:"13/27",
+ sol:"Each child has 14 (sex, weekday) states; 196 ordered pairs. Pairs with at least one Tuesday-boy: 196 − 13² = 27. Of these, both-boy pairs: 49 − 36 = 13. Answer <b>13/27</b> — the extra detail shifts the answer from 1/3 toward 1/2 because it partially identifies which child is the boy."},
+{id:"b7",cat:"bayes",fmt:"num",q:"An urn holds 5 red and 3 blue balls. Draw two without replacement. P(the second ball is red)?",ans:5/8,disp:"5/8",
+ sol:"By symmetry, every position in a random ordering is equally likely to be red: 5/8. Or brute-force: (5/8)(4/7) + (3/8)(5/7) = 5/8."},
+{id:"b8",cat:"bayes",fmt:"num",q:"You assign a stock a 60% chance of rising. A signal fires with P(signal | rise) = 0.8 and P(signal | fall) = 0.3. The signal fires. Posterior P(rise)?",ans:0.8,disp:"0.8",
+ sol:"0.6·0.8 / (0.6·0.8 + 0.4·0.3) = 0.48/0.60 = <b>0.8</b>. Same machinery as b1, dressed as a trading signal."},
+/* Distributions */
+{id:"d1",cat:"dist",fmt:"mc",q:"Var(aX + b) = ?",opts:["a·Var(X)","a²·Var(X)","a²·Var(X) + b","a·Var(X) + b²"],ans:1,
+ sol:"Shifts don't affect spread; scaling by a scales SD by |a|, hence variance by a². Var(aX + b) = a²Var(X)."},
+{id:"d2",cat:"dist",fmt:"num",q:"X ~ N(0,1). P(X > 1.96)?",ans:0.025,disp:"0.025",
+ sol:"1.96 is the 97.5th percentile of the standard normal, so the upper tail holds 2.5%. Companion numbers: P(X > 1.645) = 5%, P(X > 2.33) ≈ 1%."},
+{id:"d3",cat:"dist",fmt:"num",q:"X and Y are independent N(0,1). Standard deviation of X + Y?",ans:Math.SQRT2,disp:"√2 ≈ 1.414",
+ sol:"Variances add under independence: Var = 2, SD = √2. Volatility scales with the square root of independent exposures — the same reason vol scales with √t."},
+{id:"d4",cat:"dist",fmt:"open",q:"Why does the sample variance divide by n − 1 instead of n?",disp:"Bessel's correction",
+ sol:"Deviations are measured from x̄, which is fitted to the same data, so Σ(xᵢ − x̄)² is systematically smaller than Σ(xᵢ − μ)². In fact E[Σ(xᵢ − x̄)²] = (n − 1)σ², so dividing by n − 1 makes the estimator unbiased. One degree of freedom was spent estimating the mean."},
+{id:"d5",cat:"dist",fmt:"num",q:"X ~ Binomial(n = 100, p = 0.5). Standard deviation?",ans:5,disp:"√(np(1−p)) = 5",
+ sol:"√(100 · 0.5 · 0.5) = √25 = 5. So 100 coin flips land within 45–55 heads roughly 68% of the time."},
+{id:"d6",cat:"dist",fmt:"mc",q:"For a Poisson(λ) random variable, the variance equals:",opts:["λ","λ²","√λ","1/λ"],ans:0,
+ sol:"Mean = variance = λ. Overdispersion (variance > mean) in real count data is the standard reason to reject a Poisson model."},
+{id:"d7",cat:"dist",fmt:"num",q:"Three random variables have all pairwise correlations equal to ρ. What is the minimum possible value of ρ?",ans:-0.5,disp:"−1/2",
+ sol:"Var(X + Y + Z) = 3 + 6ρ ≥ 0 ⟹ ρ ≥ −1/2 (with unit variances). Generalizes to ρ ≥ −1/(n−1) for n variables — you cannot make everything strongly negatively correlated with everything else."},
+{id:"d8",cat:"dist",fmt:"open",q:"State the Central Limit Theorem, and give one situation where it fails.",disp:"CLT + failure case",
+ sol:"For iid X₁…Xₙ with finite mean μ and variance σ², √n(X̄ − μ)/σ converges in distribution to N(0,1). It fails without finite variance — Cauchy sample means are Cauchy at every n — and degrades badly under strong dependence or when n is small relative to skew/kurtosis (fat-tailed returns)."},
+/* Brainteasers */
+{id:"t1",cat:"teaser",fmt:"open",q:"Make me a market on the number of piano tuners in Sydney.",disp:"Fermi + bid/ask",
+ sol:"Fermi first: ~5M people, ~2M households, maybe 1 in 50 owns a piano → 40k pianos. Tuned ~once a year; a tuner does ~4/day, ~800/year → ~50 tuners. Then quote around it with width reflecting your uncertainty, e.g. <b>35 bid at 70</b>. The interviewer wants a structured estimate, a two-sided quote, and willingness to tighten or move as they trade against you."},
+{id:"t2",cat:"teaser",fmt:"num",q:"Roll two fair dice; you're paid the product. Fair price?",ans:12.25,disp:"3.5² = 12.25",
+ sol:"Independence: E[XY] = E[X]E[Y] = 3.5² = 12.25. Note this is below E[(sum/2)²-ish intuitions people reach for — independence is doing the work."},
+{id:"t3",cat:"teaser",fmt:"open",q:"Two ropes each burn in exactly 60 minutes, but non-uniformly. Measure 45 minutes.",disp:"Both-ends trick",
+ sol:"Light rope A at both ends and rope B at one end. A finishes at 30 min; at that instant light B's other end — B's remaining half-burn takes 15 min. Total <b>45</b>. Key idea: lighting both ends halves remaining burn time regardless of non-uniformity."},
+{id:"t4",cat:"teaser",fmt:"num",q:"25 horses, races of 5, no stopwatch. Minimum races to find the top 3?",ans:7,disp:"7",
+ sol:"Five heats (5), then a race of the five winners (6). The winner is #1. Only 5 horses can still be 2nd or 3rd: the 2nd and 3rd from the winner's heat, the runner-up's top two, and the third-placer's winner. Race those five (7)."},
+{id:"t5",cat:"teaser",fmt:"num",q:"100 closed doors. Person k toggles every k-th door, for k = 1…100. How many doors end open?",ans:10,disp:"10",
+ sol:"Door n is toggled once per divisor of n; it ends open iff n has an odd number of divisors, i.e. n is a perfect square. Squares up to 100: <b>10</b>."},
+{id:"t6",cat:"teaser",fmt:"num",q:"How many times do a clock's hour and minute hands overlap in 12 hours?",ans:11,disp:"11",
+ sol:"The minute hand laps the hour hand at relative speed 11 revolutions per 12 hours → 11 overlaps, every 12/11 h ≈ 65.45 min. Not 12 — the ~11:05 overlap and 12:00 are the same event."},
+{id:"t7",cat:"teaser",fmt:"num",q:"Fair coin-flip game for $1 a flip until someone is broke. You start with $20, your opponent with $80. P(you win everything)?",ans:0.2,disp:"20/100 = 0.2",
+ sol:"Gambler's ruin with p = ½: P(win) = your stake / total stake = 20/100. A martingale argument gives it in one line: your expected final wealth must equal $20, and the only outcomes are $0 or $100."},
+{id:"t8",cat:"teaser",fmt:"open",q:"You're a market maker. Why widen your quotes when volatility rises?",disp:"Inventory + adverse selection",
+ sol:"Two channels. <b>Inventory risk</b>: any position you're left holding moves against you faster, so the spread must compensate for a bigger expected holding cost. <b>Adverse selection</b>: in fast markets a larger share of incoming flow is informed or stale-quote sniping, so the average trade is more toxic. Wider spreads and smaller size restore the edge; the alternative is being run over at your own prices."},
+/* Probability — additions */
+{id:"p9",cat:"prob",d:1,fmt:"num",q:"Flip a fair coin 10 times. P(exactly 5 heads)?",ans:252/1024,disp:"C(10,5)/2¹⁰ ≈ 0.246",sol:"C(10,5) = 252 favorable of 1,024: ≈ 24.6%. Even the modal outcome is a minority — a useful anchor."},
+{id:"p10",cat:"prob",d:1,fmt:"num",q:"One die roll. P(result > 4)?",ans:1/3,disp:"1/3",sol:"Faces 5 and 6: 2/6 = 1/3."},
+{id:"p11",cat:"prob",d:1,fmt:"mc",q:"Roll two dice. P(both show even numbers)?",opts:["1/2","1/3","1/4","1/6"],ans:2,sol:"Each is even with probability 1/2; independent, so 1/4."},
+{id:"p12",cat:"prob",d:2,fmt:"num",q:"P(a random 5-card hand is a flush — all one suit, straight flushes included)?",ans:4*1287/2598960,disp:"4·C(13,5)/C(52,5) ≈ 0.00198",sol:"4 suits × C(13,5) = 5,148 hands of C(52,5) = 2,598,960 ⟹ ≈ 0.198%."},
+{id:"p13",cat:"prob",d:2,fmt:"num",q:"P(a random 5-card hand is a full house)?",ans:3744/2598960,disp:"3744/C(52,5) ≈ 0.00144",sol:"13·C(4,3) trips × 12·C(4,2) pairs = 3,744 hands ⟹ ≈ 0.144%."},
+{id:"p14",cat:"prob",d:2,fmt:"num",q:"Two dice. P(at least one shows a 6 | sum ≥ 10)?",ans:5/6,disp:"5/6",sol:"Sum ≥ 10 outcomes: (4,6),(5,5),(6,4),(5,6),(6,5),(6,6) — six cases, all but (5,5) contain a 6: 5/6."},
+{id:"p15",cat:"prob",d:2,fmt:"num",q:"Pick a random 3-digit number (100–999). P(all digits distinct)?",ans:0.72,disp:"0.72",sol:"9 choices for the first digit, 9 for the second (anything but the first), 8 for the third: 648/900 = 0.72."},
+{id:"p16",cat:"prob",d:2,fmt:"open",q:"Three cards: one red/red, one black/black, one red/black. A random card is drawn and shows a red face. P(the other side is red)?",disp:"2/3",sol:"Count red <i>faces</i>, not cards: 3 red faces are equally likely, and 2 belong to the red/red card ⟹ <b>2/3</b>. The 1/2 answer forgets the RR card is twice as likely to have produced a red face."},
+{id:"p17",cat:"prob",d:2,fmt:"num",q:"Six people sit randomly in a row. P(two specific people sit next to each other)?",ans:1/3,disp:"1/3",sol:"Glue the pair: 2·5!/6! = 240/720 = 1/3."},
+{id:"p18",cat:"prob",d:2,fmt:"num",q:"P(a random 5-card hand contains all four aces)?",ans:48/2598960,disp:"48/C(52,5) ≈ 1.85×10⁻⁵",sol:"Fix the 4 aces; the fifth card is any of 48: 48/2,598,960. Fraction entry accepted."},
+{id:"p19",cat:"prob",d:3,fmt:"open",q:"Two people arrive uniformly at random between 12:00 and 1:00 and each waits 15 minutes. P(they meet)?",disp:"7/16",sol:"Unit square, meet iff |X − Y| ≤ 1/4. Complement is two triangles of legs 3/4: area 2·(1/2)(3/4)² = 9/16 ⟹ P(meet) = <b>7/16</b>."},
+{id:"p20",cat:"prob",d:3,fmt:"open",q:"Bertrand's paradox: what is the probability a random chord of a circle is longer than the side of the inscribed equilateral triangle?",disp:"1/3, 1/2, or 1/4",sol:"It depends on what 'random chord' means: random endpoints ⟹ 1/3; random midpoint distance ⟹ 1/2; random midpoint in the disk ⟹ 1/4. The interview point: 'uniformly at random' is not well-defined until you name the measure."},
+{id:"p21",cat:"prob",d:2,fmt:"num",q:"Roll three dice. P(sum = 10)?",ans:27/216,disp:"27/216 = 0.125",sol:"27 ordered triples sum to 10 (same count as 11 — the two central sums): 27/216 = 1/8."},
+{id:"p22",cat:"prob",d:2,fmt:"num",q:"Roll a die 3 times. P(exactly one 6)?",ans:75/216,disp:"75/216 ≈ 0.347",sol:"C(3,1)·(1/6)·(5/6)² = 75/216 ≈ 34.7%."},
+{id:"p23",cat:"prob",d:3,fmt:"open",q:"100 prisoners, 100 boxes with their numbers randomly inside; each may open 50 boxes. All must find their own number. Best strategy and survival probability?",disp:"Cycle-following ≈ 31%",sol:"Each prisoner opens their own-numbered box and follows the chain of numbers found. Everyone succeeds iff the permutation has no cycle longer than 50: P = 1 − Σ₅₁¹⁰⁰ 1/k ≈ 1 − ln 2 ≈ <b>31%</b>, versus 2⁻¹⁰⁰ for independent guessing."},
+{id:"p24",cat:"prob",d:2,fmt:"num",q:"In a random ordering of the letters A–F, P(A appears before B)?",ans:0.5,disp:"1/2",sol:"By symmetry between A and B: 1/2. Everything else is irrelevant."},
+{id:"p25",cat:"prob",d:2,fmt:"num",q:"In a random ordering of A–F, P(A before B and B before C)?",ans:1/6,disp:"1/6",sol:"The 3! relative orders of A, B, C are equally likely; one is correct: 1/6."},
+{id:"p26",cat:"prob",d:3,fmt:"num",q:"Ballot problem: candidate A receives 6 votes, B receives 4, counted in random order. P(A is strictly ahead throughout the count)?",ans:0.2,disp:"(6−4)/(6+4) = 0.2",sol:"Bertrand's ballot theorem: (p − q)/(p + q) = 2/10, provable by the reflection principle."},
+{id:"p27",cat:"prob",d:1,fmt:"mc",q:"Draw one card. P(red or an ace)?",opts:["1/2","7/13","15/26","8/13"],ans:1,sol:"Inclusion–exclusion: 26/52 + 4/52 − 2/52 = 28/52 = 7/13."},
+{id:"p28",cat:"prob",d:2,fmt:"num",q:"Roll two dice. P(the results differ by exactly 1)?",ans:10/36,disp:"10/36 ≈ 0.278",sol:"Adjacent pairs (1,2)…(5,6), ordered both ways: 10/36 = 5/18."},
+{id:"p29",cat:"prob",d:3,fmt:"open",q:"Draw independent U(0,1) numbers until the running sum exceeds 1. Expected number of draws?",disp:"e ≈ 2.718",sol:"P(N > n) = P(sum of n uniforms ≤ 1) = 1/n!, so E[N] = Σₙ₌₀ 1/n! = <b>e</b>. A classic 'why on earth is e here' result — the simplex volume does the work."},
+{id:"p30",cat:"prob",d:2,fmt:"num",q:"Three people, birth months uniform. P(no two share a birth month)?",ans:1320/1728,disp:"≈ 0.764",sol:"12·11·10/12³ = 1320/1728 ≈ 76.4%. Mini birthday problem."},
+/* Combinatorics — additions */
+{id:"c9",cat:"comb",d:1,fmt:"num",q:"How many ways to arrange 5 distinct books on a shelf?",ans:120,disp:"5! = 120",sol:"5 choices for the first slot, 4 for the next, …: 5! = 120."},
+{id:"c10",cat:"comb",d:1,fmt:"num",q:"License plates: 3 letters followed by 3 digits. How many?",ans:17576000,disp:"26³·10³ = 17,576,000",sol:"26³ · 10³ = 17,576,000."},
+{id:"c11",cat:"comb",d:2,fmt:"num",q:"From 8 people, choose 1 captain and 2 (indistinct) co-captains. How many ways?",ans:168,disp:"8·C(7,2) = 168",sol:"8 captains × C(7,2) = 21 co-captain pairs = 168."},
+{id:"c12",cat:"comb",d:2,fmt:"num",q:"Non-negative integer solutions to x + y + z = 10?",ans:66,disp:"C(12,2) = 66",sol:"Stars and bars: C(10 + 3 − 1, 3 − 1) = C(12,2) = 66."},
+{id:"c13",cat:"comb",d:2,fmt:"mc",q:"How many diagonals does a decagon have?",opts:["25","35","40","45"],ans:1,sol:"n(n−3)/2 = 10·7/2 = 35: all C(10,2) = 45 segments minus 10 sides."},
+{id:"c14",cat:"comb",d:1,fmt:"num",q:"Binary strings of length 8 with exactly three 1s?",ans:56,disp:"C(8,3) = 56",sol:"Choose the positions of the 1s: C(8,3) = 56."},
+{id:"c15",cat:"comb",d:2,fmt:"num",q:"Distinct arrangements of the letters in LEVEL?",ans:30,disp:"5!/(2!·2!) = 30",sol:"Two E's and two L's: 120/4 = 30."},
+{id:"c16",cat:"comb",d:3,fmt:"num",q:"Ways to tile a 2×10 strip with 1×2 dominoes?",ans:89,disp:"89 (Fibonacci)",sol:"f(n) = f(n−1) + f(n−2) — the last column is one vertical domino or two horizontals — with f(1)=1, f(2)=2: 1,2,3,5,8,13,21,34,55,<b>89</b>."},
+{id:"c17",cat:"comb",d:3,fmt:"num",q:"Valid (balanced) sequences of 5 pairs of brackets?",ans:42,disp:"C₅ = 42",sol:"Catalan number C₅ = C(10,5)/6 = 42. Catalan counts balanced brackets, monotone lattice paths below the diagonal, binary trees."},
+{id:"c18",cat:"comb",d:2,fmt:"num",q:"Ways to give 5 distinct prizes to 3 people (any person may receive any number)?",ans:243,disp:"3⁵ = 243",sol:"Each prize independently picks a recipient: 3⁵ = 243."},
+{id:"c19",cat:"comb",d:3,fmt:"num",q:"Number of surjections from a 4-element set onto a 3-element set?",ans:36,disp:"36",sol:"Inclusion–exclusion: 3⁴ − C(3,1)·2⁴ + C(3,2)·1⁴ = 81 − 48 + 3 = 36. Equivalently 3!·S(4,3) = 6·6."},
+{id:"c20",cat:"comb",d:2,fmt:"num",q:"How many rectangles (of any size) in a 4×4 grid of unit squares?",ans:100,disp:"C(5,2)² = 100",sol:"A rectangle is a choice of 2 of the 5 vertical lines and 2 of the 5 horizontal: 10² = 100."},
+{id:"c21",cat:"comb",d:3,fmt:"open",q:"Derive the stars-and-bars formula for the number of non-negative solutions to x₁ + … + x_k = n.",disp:"C(n+k−1, k−1)",sol:"Lay out n stars and insert k−1 bars to cut them into k ordered groups; each arrangement of the n+k−1 symbols corresponds to exactly one solution ⟹ <b>C(n+k−1, k−1)</b>."},
+{id:"c22",cat:"comb",d:2,fmt:"num",q:"Distinct arrangements of BANANA?",ans:60,disp:"6!/(3!·2!) = 60",sol:"Three A's, two N's: 720/12 = 60."},
+{id:"c23",cat:"comb",d:3,fmt:"num",q:"Seat 4 couples in a row of 8 so that each couple sits together. How many arrangements?",ans:384,disp:"4!·2⁴ = 384",sol:"Order the 4 blocks (4!) and flip each internally (2⁴): 24·16 = 384."},
+{id:"c24",cat:"comb",d:3,fmt:"open",q:"Use inclusion–exclusion to state the derangement count Dₙ.",disp:"n!·Σ(−1)ᵏ/k!",sol:"Subtract permutations fixing at least one point: Dₙ = n! Σₖ₌₀ⁿ (−1)ᵏ/k! ≈ n!/e. The alternating sum is inclusion–exclusion over the sets 'position i is fixed'."},
+/* EV & games — additions */
+{id:"e9",cat:"ev",d:1,fmt:"num",q:"A flip pays $1 on heads, $0 on tails. Fair price?",ans:0.5,disp:"$0.50",sol:"½·1 + ½·0 = 0.5."},
+{id:"e10",cat:"ev",d:1,fmt:"num",q:"E[sum of two fair dice]?",ans:7,disp:"7",sol:"Linearity: 3.5 + 3.5 = 7. No need to touch the distribution."},
+{id:"e11",cat:"ev",d:1,fmt:"num",q:"Expected flips of a fair coin to see the first head?",ans:2,disp:"2",sol:"Geometric, p = ½: E = 1/p = 2."},
+{id:"e12",cat:"ev",d:2,fmt:"open",q:"Expected number of fair coin flips to see the pattern HT?",disp:"4",sol:"Once you flip a head, you're just waiting for a tail — no way to lose progress. E = E[first H] + E[first T] = 2 + 2 = <b>4</b>. Contrast HH = 6: a tail after H resets you."},
+{id:"e13",cat:"ev",d:1,fmt:"num",q:"E[number of heads in 10 fair flips]?",ans:5,disp:"5",sol:"np = 10·½ = 5 by linearity."},
+{id:"e14",cat:"ev",d:2,fmt:"num",q:"Variance of a single fair die roll?",ans:35/12,disp:"35/12 ≈ 2.92",sol:"E[X²] = 91/6, so Var = 91/6 − 3.5² = 35/12."},
+{id:"e15",cat:"ev",d:3,fmt:"num",q:"Expected rolls of a fair die to see two consecutive sixes?",ans:42,disp:"42",sol:"States: E₀ = 1 + (5/6)E₀ + (1/6)E₁, E₁ = 1 + (5/6)E₀. Solving gives E₀ = <b>42</b>. General pattern for k sixes in a row: 6 + 6² + … + 6ᵏ."},
+{id:"e16",cat:"ev",d:1,fmt:"num",q:"Expected rolls to see a number greater than 4?",ans:3,disp:"3",sol:"p = 2/6 = 1/3 ⟹ E = 3."},
+{id:"e17",cat:"ev",d:3,fmt:"num",q:"Die paying face value, up to two optional rerolls (keep the last roll). EV under optimal play?",ans:14/3,disp:"14/3 ≈ 4.67",sol:"Backward induction: last stage worth 3.5; middle stage keep 4,5,6 ⟹ 4.25; first stage keep only 5,6 (above 4.25): (1/3)(5.5) + (2/3)(4.25) = 14/3."},
+{id:"e18",cat:"ev",d:1,fmt:"num",q:"Each flip: heads win $2, tails lose $1. EV per flip?",ans:0.5,disp:"$0.50",sol:"½·2 − ½·1 = 0.5."},
+{id:"e19",cat:"ev",d:3,fmt:"num",q:"Expected number of cards drawn from a shuffled deck until the first ace appears (inclusive)?",ans:10.6,disp:"53/5 = 10.6",sol:"The 4 aces cut the 48 other cards into 5 exchangeable gaps of expected size 48/5 = 9.6; the first ace sits after one gap: 9.6 + 1 = <b>10.6</b>."},
+{id:"e20",cat:"ev",d:3,fmt:"num",q:"Roll a die 6 times. Expected number of distinct faces seen?",ans:6*(1-Math.pow(5/6,6)),disp:"6(1−(5/6)⁶) ≈ 3.99",sol:"Indicator per face: P(face appears) = 1 − (5/6)⁶ ≈ 0.665; sum over 6 faces ≈ 3.99. Linearity beats casework."},
+{id:"e21",cat:"ev",d:2,fmt:"num",q:"Expected number of fixed points of a random permutation of n items?",ans:1,disp:"1 (any n)",sol:"Each position is fixed with probability 1/n; sum of n indicators = 1. Independence never enters."},
+{id:"e22",cat:"ev",d:3,fmt:"open",q:"State Wald's identity and give a use.",disp:"E[S_N] = E[N]·E[X]",sol:"For iid Xᵢ with finite mean and a stopping time N with E[N] < ∞ (independent of the future), E[X₁ + … + X_N] = E[N]·E[X]. Example: expected total spend of a random number of customers = expected count × expected basket."},
+{id:"e23",cat:"ev",d:1,fmt:"num",q:"Roll until you see an even number. Expected total rolls?",ans:2,disp:"2",sol:"p = ½ ⟹ geometric mean 2."},
+{id:"e24",cat:"ev",d:2,fmt:"num",q:"Two players alternate flipping a fair coin; first head wins. P(the player who goes first wins)?",ans:2/3,disp:"2/3",sol:"p = ½ + (½)²p ⟹ p = 2/3. First-mover edge from getting the odd-numbered attempts."},
+{id:"e25",cat:"ev",d:2,fmt:"num",q:"Roll two dice once. P(sum is 7 or 11)?",ans:2/9,disp:"8/36 = 2/9",sol:"6 ways to 7, 2 ways to 11: 8/36 = 2/9. The craps 'natural'."},
+{id:"e26",cat:"ev",d:3,fmt:"open",q:"Secretary problem: interviewing n candidates in random order, accept/reject on the spot. Optimal strategy and success probability?",disp:"Skip n/e, then take first best-so-far",sol:"Reject the first n/e candidates, then accept the first who beats everyone seen. Success probability → <b>1/e ≈ 37%</b>. The threshold balances learning the field against burning the best candidate."},
+{id:"e27",cat:"ev",d:2,fmt:"num",q:"E[max of three independent U(0,1)]?",ans:0.75,disp:"3/4",sol:"E[max of n uniforms] = n/(n+1) — the order statistics split [0,1] into n+1 equal expected gaps."},
+{id:"e28",cat:"ev",d:2,fmt:"num",q:"E[min of two independent U(0,1)]?",ans:1/3,disp:"1/3",sol:"Two uniforms cut [0,1] into three equal expected pieces; the min sits after the first: 1/3."},
+{id:"e29",cat:"ev",d:3,fmt:"num",q:"X, Y independent U(0,1). E|X − Y|?",ans:1/3,disp:"1/3",sol:"∫∫|x−y| dx dy = 1/3 — or note |X−Y| is the middle gap argument again: the expected distance between two of the three cut points."},
+{id:"e30",cat:"ev",d:3,fmt:"open",q:"You play a fair game and can stop whenever you like (with a bounded bankroll). Can any stopping rule give positive expected profit?",disp:"No — optional stopping",sol:"A fair game is a martingale; the optional stopping theorem says any bounded stopping time preserves the expectation, so E[profit] = 0. Doubling-down systems only work with infinite capital and no bet limits — precisely the conditions the theorem excludes."},
+/* Bayes — additions */
+{id:"b9",cat:"bayes",d:1,fmt:"num",q:"Two dice. P(sum = 7 | first die shows 2)?",ans:1/6,disp:"1/6",sol:"Need the second to show 5: 1/6. (Sum = 7 is independent of the first roll — the only sum with that property.)"},
+{id:"b10",cat:"bayes",d:1,fmt:"mc",q:"A card is a face card. P(it is a king)?",opts:["1/13","1/4","1/3","4/13"],ans:2,sol:"4 kings of 12 face cards: 1/3."},
+{id:"b11",cat:"bayes",d:2,fmt:"num",q:"Two dice. P(first die shows 6 | sum = 8)?",ans:0.2,disp:"1/5",sol:"Sum-8 outcomes: (2,6),(3,5),(4,4),(5,3),(6,2) — one of five: 1/5. Note (6,2) is one outcome, not two."},
+{id:"b12",cat:"bayes",d:2,fmt:"num",q:"40% of email is spam. 'Free' appears in 30% of spam and 5% of legitimate mail. P(spam | contains 'free')?",ans:0.8,disp:"0.8",sol:"0.4·0.3 / (0.4·0.3 + 0.6·0.05) = 0.12/0.15 = <b>0.8</b> — the naive-Bayes single-feature update."},
+{id:"b13",cat:"bayes",d:2,fmt:"num",q:"A coin is flipped twice; you learn at least one flip was heads. P(both were heads)?",ans:1/3,disp:"1/3",sol:"Condition on {HH, HT, TH}: 1/3. Same structure as the two-boys problem."},
+{id:"b14",cat:"bayes",d:3,fmt:"num",q:"Three coins: fair, two-headed, two-tailed. Pick one at random, flip once: heads. P(the other side is also heads)?",ans:2/3,disp:"2/3",sol:"Count head-faces: three are equally likely to be showing, two belong to the two-headed coin: 2/3."},
+{id:"b15",cat:"bayes",d:2,fmt:"num",q:"85% of taxis are green, 15% blue. A witness identifies the cab as blue and is 80% reliable for either color. P(the cab was blue)?",ans:0.12/0.29,disp:"12/29 ≈ 0.414",sol:"0.15·0.8 / (0.15·0.8 + 0.85·0.2) = 0.12/0.29 ≈ 41% — Kahneman–Tversky's cab problem. The reliable witness is still probably wrong because the base rate dominates."},
+{id:"b16",cat:"bayes",d:3,fmt:"open",q:"What is Simpson's paradox? Give an example.",disp:"Aggregation reversal",sol:"A trend present in every subgroup reverses when the groups are pooled, because group membership correlates with both the treatment and the outcome. Berkeley admissions: each department admitted women at equal or higher rates, but women applied to more competitive departments, so aggregate rates looked biased. Moral: control for the confounder before comparing."},
+{id:"b17",cat:"bayes",d:2,fmt:"num",q:"Two dice. P(both ≥ 5 | at least one ≥ 5)?",ans:0.2,disp:"4/20 = 0.2",sol:"P(both ≥ 5) = 4/36; P(at least one) = 1 − 16/36 = 20/36. Ratio: 4/20 = 1/5."},
+{id:"b18",cat:"bayes",d:3,fmt:"num",q:"Prior P(disease) = 0.02. Test: P(+|D) = 0.95, P(+|healthy) = 0.10. Two independent tests both positive. Posterior?",ans:0.02*0.9025/(0.02*0.9025+0.98*0.01),disp:"≈ 0.648",sol:"Odds form: prior odds 2/98 × LR² = (2/98)·(9.5)² ≈ 1.84 ⟹ P ≈ 0.648. Each positive multiplies the odds by 9.5 — chaining likelihood ratios is the clean mechanic."},
+{id:"b19",cat:"bayes",d:2,fmt:"open",q:"What is the base rate fallacy, and why does screening for rare diseases produce mostly false positives?",disp:"Ignoring priors",sol:"Judging P(hypothesis | evidence) from P(evidence | hypothesis) while ignoring the prior. With 0.1% prevalence, even a 99%-accurate test flags ~10 false positives per true positive, because the healthy population is a thousand times larger. Positive predictive value depends on prevalence, not just accuracy."},
+{id:"b20",cat:"bayes",d:2,fmt:"num",q:"A coin has P(H) = 0.5 or 0.75, equally likely. One flip: heads. Posterior P(it's the 0.75 coin)?",ans:0.6,disp:"0.6",sol:"0.5·0.75 / (0.5·0.75 + 0.5·0.5) = 0.75/1.25 = 0.6."},
+{id:"b21",cat:"bayes",d:3,fmt:"open",q:"Why are likelihood ratios the cleanest way to run Bayesian updates?",disp:"Posterior odds = prior odds × LR",sol:"In odds form, evidence acts multiplicatively: posterior odds = prior odds × P(E|H)/P(E|¬H). Independent pieces of evidence just multiply their LRs (add log-odds), no renormalizing denominators. It also separates the strength of evidence (LR) from your starting belief (prior) — which is where most Bayes arguments actually disagree."},
+{id:"b22",cat:"bayes",d:2,fmt:"num",q:"Monty Hall with 100 doors: you pick one, the host opens 98 goat doors. P(winning if you switch)?",ans:0.99,disp:"99/100",sol:"Your door keeps its 1/100; the remaining door inherits the other 99/100. The large-n version makes the original 2/3 intuitive."},
+/* Distributions — additions */
+{id:"d9",cat:"dist",d:1,fmt:"mc",q:"X ~ Uniform[a, b]. E[X] = ?",opts:["(a+b)/2","(b−a)/2","(b−a)²/12","a + b"],ans:0,sol:"Midpoint (a+b)/2 by symmetry. Variance is (b−a)²/12 — the distractor."},
+{id:"d10",cat:"dist",d:1,fmt:"num",q:"Variance of a fair coin flip (Bernoulli, p = 0.5)?",ans:0.25,disp:"p(1−p) = 0.25",sol:"p(1−p) = 0.25 — the maximum over p; uncertainty peaks at a fair coin."},
+{id:"d11",cat:"dist",d:2,fmt:"num",q:"Variance of U(0,1)?",ans:1/12,disp:"1/12 ≈ 0.083",sol:"E[X²] − (E[X])² = 1/3 − 1/4 = 1/12."},
+{id:"d12",cat:"dist",d:2,fmt:"num",q:"IQ ~ N(100, sd 15). P(IQ > 115)?",ans:0.1587,disp:"≈ 0.159",sol:"One sd above the mean: upper tail ≈ 15.87%, from the 68–95–99.7 rule."},
+{id:"d13",cat:"dist",d:2,fmt:"mc",q:"X ~ Poisson(λ₁), Y ~ Poisson(λ₂), independent. X + Y is:",opts:["Poisson(λ₁+λ₂)","Poisson(λ₁λ₂)","Normal","Binomial"],ans:0,sol:"Poissons are closed under independent addition: Poisson(λ₁ + λ₂). Merging independent arrival streams stays Poisson."},
+{id:"d14",cat:"dist",d:2,fmt:"num",q:"Waiting time is Exponential with mean 10 minutes. P(wait > 20 minutes)?",ans:Math.exp(-2),disp:"e⁻² ≈ 0.135",sol:"P(T > t) = e^(−t/mean) = e⁻² ≈ 13.5%."},
+{id:"d15",cat:"dist",d:2,fmt:"open",q:"Which distributions are memoryless, and what does that mean?",disp:"Geometric & exponential",sol:"P(T > s + t | T > s) = P(T > t): having waited tells you nothing about the remaining wait. The geometric (discrete) and exponential (continuous) are the <i>only</i> memoryless distributions — which is why they're forced on you whenever you assume constant hazard rates."},
+{id:"d16",cat:"dist",d:3,fmt:"num",q:"X ~ N(0,1). E[X⁴]?",ans:3,disp:"3",sol:"Standard normal moments: E[X²ⁿ] = (2n−1)!!, so E[X⁴] = 3. Equivalently kurtosis of the normal is 3."},
+{id:"d17",cat:"dist",d:1,fmt:"num",q:"Correlation between X and −2X?",ans:-1,disp:"−1",sol:"Perfect linear relationship with negative slope: −1. The scale (2) drops out of correlation."},
+{id:"d18",cat:"dist",d:3,fmt:"num",q:"X, Y iid N(0,1). Corr(X, X + Y)?",ans:Math.SQRT1_2,disp:"1/√2 ≈ 0.707",sol:"Cov = Var(X) = 1; sds are 1 and √2 ⟹ ρ = 1/√2. A signal keeps ~71% correlation after adding equal independent noise."},
+{id:"d19",cat:"dist",d:2,fmt:"mc",q:"Binomial(n, p) with n → ∞ and np fixed converges to:",opts:["Normal","Poisson","Exponential","Uniform"],ans:1,sol:"Poisson(np) — the law of rare events. With np(1−p) → ∞ instead, you'd get the normal."},
+{id:"d20",cat:"dist",d:2,fmt:"num",q:"Population sd 10, sample size 25. Standard error of the sample mean?",ans:2,disp:"σ/√n = 2",sol:"10/√25 = 2. Quadrupling the sample only halves the SE."},
+{id:"d21",cat:"dist",d:2,fmt:"num",q:"With SE = 2, the half-width of a 95% confidence interval for the mean (normal case)?",ans:3.92,disp:"1.96·SE = 3.92",sol:"±1.96 × 2 = ±3.92."},
+{id:"d22",cat:"dist",d:3,fmt:"open",q:"Decompose mean squared error into bias and variance.",disp:"MSE = Bias² + Var",sol:"E[(θ̂ − θ)²] = (E[θ̂] − θ)² + Var(θ̂). Regularization accepts bias to cut variance; the optimum is rarely at zero bias. The same trade drives shrinkage estimators and ridge regression."},
+{id:"d23",cat:"dist",d:2,fmt:"num",q:"Kurtosis of a normal distribution?",ans:3,disp:"3",sol:"3 — hence 'excess kurtosis' subtracts it. Daily equity returns run excess kurtosis well above 0: fat tails."},
+{id:"d24",cat:"dist",d:3,fmt:"num",q:"Exponential with mean 10. Median?",ans:10*Math.LN2,disp:"10·ln 2 ≈ 6.93",sol:"Solve e^(−m/10) = ½ ⟹ m = 10 ln 2. Median < mean — the right tail drags the mean up."},
+{id:"d25",cat:"dist",d:2,fmt:"open",q:"Law of large numbers vs central limit theorem — what does each actually say?",disp:"Location vs fluctuation",sol:"LLN: X̄ → μ (the sample mean converges to the truth). CLT: the <i>error</i> X̄ − μ, blown up by √n, is asymptotically normal — it describes the shape and size (σ/√n) of the fluctuations the LLN says vanish. One is a destination, the other is the speed and shape of approach."},
+{id:"d26",cat:"dist",d:3,fmt:"num",q:"Two independent exponential clocks, each mean 10. Expected time until the first rings?",ans:5,disp:"5",sol:"Min of exponentials is exponential with summed rates: rate 1/10 + 1/10 = 1/5 ⟹ mean 5."},
+{id:"d27",cat:"dist",d:1,fmt:"num",q:"Skewness of any symmetric distribution (with third moment)?",ans:0,disp:"0",sol:"Odd central moments vanish under symmetry."},
+{id:"d28",cat:"dist",d:3,fmt:"open",q:"Derive the MLE of p from n Bernoulli(p) observations.",disp:"p̂ = sample mean",sol:"Log-likelihood ℓ(p) = k ln p + (n−k) ln(1−p) with k successes; ℓ′(p) = k/p − (n−k)/(1−p) = 0 ⟹ <b>p̂ = k/n</b>. The intuitive answer is also the formal one — not always the case (variance MLE divides by n, not n−1)."},
+/* Markov & processes */
+{id:"m1",cat:"markov",d:1,fmt:"num",q:"Two-state chain, each state stays put with probability 0.9. Long-run fraction of time in state 1?",ans:0.5,disp:"1/2",sol:"Symmetric transition rates ⟹ uniform stationary distribution: ½. Stickiness slows mixing but doesn't move the stationary split."},
+{id:"m2",cat:"markov",d:2,fmt:"num",q:"Chain: from A go to B with prob 0.3 (stay 0.7); from B go to A with prob 0.6 (stay 0.4). Stationary probability of A?",ans:2/3,disp:"2/3",sol:"Balance: π_A·0.3 = π_B·0.6 ⟹ π_B = π_A/2; normalize ⟹ π_A = 2/3. Flow out equals flow in."},
+{id:"m3",cat:"markov",d:1,fmt:"num",q:"A state has self-loop probability 0.8. Expected number of steps to leave it?",ans:5,disp:"5",sol:"Geometric with p = 0.2: E = 5."},
+{id:"m4",cat:"markov",d:1,fmt:"open",q:"State the Markov property.",disp:"Future ⟂ past | present",sol:"P(X_{n+1} | X_n, X_{n−1}, …, X_0) = P(X_{n+1} | X_n): given the present state, the future is independent of the path taken to get there. Everything decision-relevant must be packed into the state — which is a modeling choice, not a law."},
+{id:"m5",cat:"markov",d:3,fmt:"num",q:"Fair random walk on {0,…,10} with absorbing ends, starting at 3. P(absorbed at 10)?",ans:0.3,disp:"3/10",sol:"For a fair walk, hitting probability is linear in position: k/N = 3/10. (It's a martingale — expected final position equals 3.)"},
+{id:"m6",cat:"markov",d:3,fmt:"num",q:"Symmetric ±1 random walk from 0. Expected number of steps to reach +3 or −3?",ans:9,disp:"9",sol:"E[T] = a·b for barriers at −a and +b: 3·3 = 9. (Sₙ² − n is a martingale; optional stopping gives E[T] = E[S_T²] = 9.)"},
+{id:"m7",cat:"markov",d:3,fmt:"open",q:"Pólya's theorem: is the simple symmetric random walk recurrent?",disp:"Yes in 1D/2D, no in 3D",sol:"In 1 and 2 dimensions the walk returns to the origin with probability 1; in 3+ it escapes forever with positive probability (return prob ≈ 0.34 in 3D). 'A drunk man finds his way home; a drunk bird may be lost forever.' The return-probability series Σ p₂ₙ(0) diverges in d ≤ 2 and converges in d ≥ 3."},
+{id:"m8",cat:"markov",d:2,fmt:"num",q:"A mouse moves between 3 rooms arranged in a cycle, each step to one of its two neighbors with probability ½ each. Long-run fraction of time in room 1?",ans:1/3,disp:"1/3",sol:"By symmetry the stationary distribution is uniform: 1/3."},
+{id:"m9",cat:"markov",d:2,fmt:"num",q:"Gambler's ruin, fair coin: you have $10 of $40 total. P(you win everything)?",ans:0.25,disp:"10/40",sol:"Fair game ⟹ proportional to stake: 1/4."},
+{id:"m10",cat:"markov",d:3,fmt:"open",q:"Gambler's ruin with win probability p ≠ ½: give the probability of reaching N from k before 0.",disp:"(1−(q/p)ᵏ)/(1−(q/p)ᴺ)",sol:"With q = 1 − p, P = (1 − (q/p)ᵏ)/(1 − (q/p)ᴺ). Even a small edge compounds: at p = 0.51 with k = 50, N = 100, you win ≈ 88% of the time. Conversely a small house edge makes ruin near-certain against a deep bankroll."},
+{id:"m11",cat:"markov",d:1,fmt:"num",q:"From state A, P(move to B) = 0.25 each step (else stay). Expected steps until first visit to B?",ans:4,disp:"4",sol:"Geometric: 1/0.25 = 4."},
+{id:"m12",cat:"markov",d:3,fmt:"num",q:"Branching process: each individual leaves 0, 1, or 2 offspring with probabilities ¼, ½, ¼. Extinction probability?",ans:1,disp:"1",sol:"Mean offspring = 1 (critical case). Critical and subcritical branching processes die out with probability 1 — surviving requires mean strictly above 1."},
+{id:"m13",cat:"markov",d:3,fmt:"num",q:"Branching process: 0 offspring with prob ¼, 2 with prob ¾. Extinction probability?",ans:1/3,disp:"1/3",sol:"Smallest fixed point of the generating function: q = ¼ + ¾q² ⟹ 3q² − 4q + 1 = 0 ⟹ q ∈ {1/3, 1} ⟹ <b>1/3</b>."},
+{id:"m14",cat:"markov",d:2,fmt:"open",q:"Stationary distribution vs limiting distribution — when do they differ?",disp:"Periodicity breaks the limit",sol:"A stationary π satisfies πP = π; a limiting distribution requires the chain to actually converge to it from any start. Irreducible + aperiodic ⟹ they coincide. A periodic chain (e.g. deterministic 2-cycle) has a stationary π but oscillates forever — time averages converge, snapshots don't."},
+{id:"m15",cat:"markov",d:2,fmt:"num",q:"Poisson process, 2 events/hour. P(no events in 30 minutes)?",ans:Math.exp(-1),disp:"e⁻¹ ≈ 0.368",sol:"Count in 30 min is Poisson(1): P(0) = e⁻¹."},
+{id:"m16",cat:"markov",d:1,fmt:"num",q:"Poisson process, 2 events/hour. Expected events in 3 hours?",ans:6,disp:"6",sol:"Counts over an interval are Poisson(λt) with mean λt = 2 × 3 = 6."},
+{id:"m17",cat:"markov",d:3,fmt:"num",q:"A Poisson process has exactly one arrival in [0, 1]. Expected arrival time?",ans:0.5,disp:"0.5",sol:"Conditioned on the count, Poisson arrival times are iid uniform on the interval — so E = ½. This 'order statistics property' is the standard trick for conditional-arrival questions."},
+{id:"m18",cat:"markov",d:2,fmt:"open",q:"Describe first-step analysis and when to reach for it.",disp:"Condition on step one",sol:"Write the unknown (hitting probability, expected hitting time) as a function of the current state, condition on the first transition, and use the Markov property to get linear equations: h(x) = Σ_y P(x,y)·h(y) (+1 for expected times). It converts 'infinite horizon' questions into small linear systems — the workhorse behind HH-vs-HT, ruin problems, and dice-pattern questions."},
+{id:"m19",cat:"markov",d:3,fmt:"num",q:"Random walk on the 4 corners of a square (each step to an adjacent corner). Expected steps to reach the opposite corner?",ans:4,disp:"4",sol:"Let h₁, h₂ be expected times from distance 1 and 2. h₂ = 1 + h₁; h₁ = 1 + ½·0 + ½·h₂ ⟹ h₁ = 3, <b>h₂ = 4</b>."},
+{id:"m20",cat:"markov",d:3,fmt:"open",q:"Define a martingale and give two examples.",disp:"E[Xₙ₊₁ | past] = Xₙ",sol:"A process whose conditional expectation of the next value, given the whole history, equals the current value: a fair game. Examples: cumulative winnings in fair coin betting; Sₙ² − n for a symmetric walk; discounted asset prices under the risk-neutral measure — the last being why martingale theory is the backbone of derivatives pricing."},
+/* Brainteasers — additions */
+{id:"t9",cat:"teaser",d:2,fmt:"num",q:"8 balls, one slightly heavier, a balance scale. Minimum weighings to guarantee finding it?",ans:2,disp:"2",sol:"Weigh 3 vs 3: if balanced it's in the leftover 2 (one more weighing); if not, weigh 2 of the heavy trio. Ternary search: each weighing has 3 outcomes, and 3² = 9 ≥ 8."},
+{id:"t10",cat:"teaser",d:2,fmt:"num",q:"12 balls, one is off-weight (heavier or lighter, unknown). Minimum weighings?",ans:3,disp:"3",sol:"24 possible states (12 balls × 2 directions); 3³ = 27 ≥ 24 so 3 weighings suffice — and 3² = 9 < 24 shows 2 can't. The information-theoretic bound is the interview answer; the explicit scheme is the follow-up."},
+{id:"t11",cat:"teaser",d:2,fmt:"open",q:"Three switches downstairs, one bulb upstairs, one trip allowed. Which switch controls the bulb?",disp:"Use heat",sol:"Turn switch 1 on for a few minutes, off; turn switch 2 on; go up. Lit ⟹ 2; warm and dark ⟹ 1; cold and dark ⟹ 3. The trick is realizing a bulb carries two observable bits: light and heat."},
+{id:"t12",cat:"teaser",d:2,fmt:"num",q:"A snail climbs 3 m by day and slips 2 m by night in a 10 m well. On which day does it get out?",ans:8,disp:"Day 8",sol:"Peak height on day k is k + 2 metres; needs ≥ 10 ⟹ day <b>8</b>. The trap is dividing 10 by the net 1 m/day — it escapes mid-day before the final slip."},
+{id:"t13",cat:"teaser",d:1,fmt:"num",q:"A bat and ball cost $1.10; the bat costs $1.00 more than the ball. Ball price?",ans:0.05,disp:"$0.05",sol:"b + (b + 1) = 1.10 ⟹ b = 0.05. The reflexive 10¢ answer makes the difference 90¢, not $1."},
+{id:"t14",cat:"teaser",d:1,fmt:"num",q:"A lily pad patch doubles daily and covers the pond on day 48. On which day was it half covered?",ans:47,disp:"Day 47",sol:"One doubling before full: day 47. Exponential growth spends almost all its time looking small."},
+{id:"t15",cat:"teaser",d:3,fmt:"open",q:"Two doors (freedom/death), two guards — one always lies, one always tells the truth, you don't know which. One question to find the freedom door?",disp:"Nested question",sol:"Ask either guard: 'Which door would the <i>other</i> guard say leads to freedom?' — then take the opposite door. The truth-teller reports the lie; the liar lies about the truth: both answers point at death, so you invert. One layer of indirection cancels the unknown."},
+{id:"t16",cat:"teaser",d:2,fmt:"num",q:"Angle between the hour and minute hands at 3:15 (in degrees)?",ans:7.5,disp:"7.5°",sol:"Minute hand at 90°; hour hand at 90° + 15/60 × 30° = 97.5°. Difference 7.5°. The hour hand moves — the 0° answer forgets that."},
+{id:"t17",cat:"teaser",d:3,fmt:"num",q:"An ant walks on the surface of a unit cube from one corner to the opposite corner. Shortest path length?",ans:Math.sqrt(5),disp:"√5 ≈ 2.236",sol:"Unfold two faces into a 1×2 rectangle: straight line √(1² + 2²) = √5 ≈ 2.24 — shorter than the edge route (3) and the two-face 'diagonal then diagonal' (≈ 2.41)."},
+{id:"t18",cat:"teaser",d:2,fmt:"open",q:"Make a market on the sum of two dice I've rolled behind a screen.",disp:"Tight around 7",sol:"Fair value is exactly 7 with sd ≈ 2.4 — a fully known distribution, so quote tight: e.g. <b>6.9 bid at 7.1</b>. Contrast with the piano-tuner style question: quote width should reflect parameter uncertainty, and here there is none. If the counterparty saw the roll, though, you're pure adverse selection — width or refusal is about who has information, not the dice."},
+{id:"t19",cat:"teaser",d:2,fmt:"num",q:"You flip 10 fair coins; I flip 11. P(I get strictly more heads than you)?",ans:0.5,disp:"1/2",sol:"After 10-vs-10 the counts are symmetric; my extra coin breaks ties in my favor exactly when we were tied-or-I-led. Cleanly: P(more heads) = P(more tails) by symmetry, and with 21 coins exactly one of the two must happen ⟹ ½."},
+{id:"t20",cat:"teaser",d:3,fmt:"num",q:"Josephus: 10 people in a circle, every 2nd is eliminated. Which position survives?",ans:5,disp:"Position 5",sol:"n = 2ᵐ + l ⟹ survivor 2l + 1. Here 10 = 8 + 2 ⟹ position <b>5</b>. The power-of-two structure: after eliminating down to 8 people, the current position wins by leading each round."},
+{id:"t21",cat:"teaser",d:3,fmt:"open",q:"Five rational pirates split 100 coins: senior proposes, all vote, tie passes; if rejected the proposer is thrown overboard. What does the senior pirate propose?",disp:"98, 0, 1, 0, 1",sol:"Backward induction from 2 pirates (senior takes 100) up: each proposer buys the cheapest majority — pirates who'd get nothing in the next round accept a single coin. With 5: <b>98-0-1-0-1</b>. The lesson interviewers want: solve games from the end, and minimal coalitions are cheap."},
+{id:"t22",cat:"teaser",d:2,fmt:"num",q:"Three ants at the corners of a triangle each pick a random direction along the edges. P(no two collide)?",ans:0.25,disp:"2/8 = 0.25",sol:"No collision iff all go clockwise or all counter-clockwise: 2 of 2³ = 8 outcomes."},
+/* Finance & options */
+{id:"f1",cat:"fin",d:1,fmt:"num",q:"$100 at 5% annual interest, compounded yearly, for 2 years?",ans:110.25,disp:"$110.25",sol:"100 × 1.05² = 110.25."},
+{id:"f2",cat:"fin",d:1,fmt:"num",q:"Rule of 72: approximate years to double at 8% p.a.?",ans:9,disp:"9",sol:"72/8 = 9. Works because ln 2 ≈ 0.693 and the rule bakes in a small rate correction."},
+{id:"f3",cat:"fin",d:2,fmt:"num",q:"$100 at 5% continuously compounded for 2 years?",ans:100*Math.exp(0.1),disp:"100e⁰·¹ ≈ 110.52",sol:"100·e^(0.05·2) ≈ 110.52 — slightly above annual compounding's 110.25."},
+{id:"f4",cat:"fin",d:2,fmt:"num",q:"Price of a 1-year zero-coupon bond, face 100, at a 4% annually-compounded yield?",ans:100/1.04,disp:"≈ 96.15",sol:"100/1.04 = 96.15."},
+{id:"f5",cat:"fin",d:2,fmt:"num",q:"A bond has modified duration 5. Approximate % price drop for a 100bp yield rise?",ans:5,disp:"≈ 5%",sol:"ΔP/P ≈ −D·Δy = −5 × 1% = −5%. First-order only — convexity makes the true loss slightly smaller."},
+{id:"f6",cat:"fin",d:2,fmt:"mc",q:"Put–call parity (European, no dividends): C − P = ?",opts:["S − K","K − S","S − K·e^(−rT)","K·e^(−rT) − S"],ans:2,sol:"Long call + short put replicates a forward: C − P = S − K·e^(−rT). Violations are a static arbitrage — no model required."},
+{id:"f7",cat:"fin",d:2,fmt:"num",q:"Forward price of a non-dividend stock: S = 100, r = 5% continuous, T = 1 year?",ans:100*Math.exp(0.05),disp:"100e⁰·⁰⁵ ≈ 105.13",sol:"F = S·e^(rT) ≈ 105.13 — cost of carry, enforced by cash-and-carry arbitrage."},
+{id:"f8",cat:"fin",d:3,fmt:"num",q:"ATM call value via the 0.4·σ√T·S approximation: S = 100, σ = 20%, T = 1?",ans:8,disp:"≈ 8",sol:"0.4 × 0.2 × 1 × 100 = 8. The 0.4 is √(1/2π) ≈ 0.399 from Black–Scholes at the money — the fastest mental option pricer there is."},
+{id:"f9",cat:"fin",d:2,fmt:"mc",q:"Delta of an at-the-money call is approximately:",opts:["0.25","0.5","0.75","1.0"],ans:1,sol:"≈ 0.5 (slightly above, from drift and lognormality). ATM options are the halfway point between stock-like and worthless."},
+{id:"f10",cat:"fin",d:1,fmt:"num",q:"Excess return 6%, volatility 12%. Sharpe ratio?",ans:0.5,disp:"0.5",sol:"6/12 = 0.5."},
+{id:"f11",cat:"fin",d:2,fmt:"num",q:"Daily vol is 1%. Annualized vol in % (√252 convention)?",ans:Math.sqrt(252),disp:"√252 ≈ 15.87%",sol:"1% × √252 ≈ 15.87%. Vol scales with √time because independent variances add — the same fact as d3."},
+{id:"f12",cat:"fin",d:3,fmt:"num",q:"Kelly fraction for an even-money bet with win probability 0.6?",ans:0.2,disp:"2p − 1 = 0.2",sol:"f* = 2p − 1 = 20% of bankroll, maximizing expected log growth."},
+{id:"f13",cat:"fin",d:3,fmt:"open",q:"Why do practitioners bet less than full Kelly?",disp:"Estimation error + drawdowns",sol:"Kelly assumes p is known exactly; overestimating your edge makes full Kelly over-bet, and over-betting is punished more than under-betting (growth is concave in f). Full Kelly also tolerates brutal drawdowns (~50% chance of halving before doubling). Half-Kelly gives ~75% of the growth at half the variance — the standard compromise."},
+{id:"f14",cat:"fin",d:2,fmt:"num",q:"Log return corresponding to a +10% simple return?",ans:Math.log(1.1),disp:"ln 1.1 ≈ 0.0953",sol:"ln(1.1) ≈ 9.53%. Log returns add across time; simple returns add across a portfolio — mixing them up is a classic error."},
+{id:"f15",cat:"fin",d:3,fmt:"num",q:"Two assets, each 20% vol, uncorrelated, equal-weighted. Portfolio vol in %?",ans:20/Math.sqrt(2),disp:"20/√2 ≈ 14.14%",sol:"σ_p = ½√(σ₁² + σ₂²)·√2… cleanly: √(0.25·400 + 0.25·400) = √200 ≈ 14.14. Diversification cuts vol by √2 with zero correlation."},
+{id:"f16",cat:"fin",d:2,fmt:"num",q:"Same portfolio but correlation = 1. Portfolio vol in %?",ans:20,disp:"20%",sol:"Perfect correlation ⟹ vols average: 20%. Diversification benefit is exactly zero."},
+{id:"f17",cat:"fin",d:3,fmt:"open",q:"Why does diversification tend to fail in a crisis?",disp:"Correlations go to 1",sol:"Realized correlations are state-dependent: in stress, common factors (funding, liquidity, forced deleveraging) dominate idiosyncratic risk, so pairwise correlations spike toward 1 exactly when you need them low. Tail dependence isn't captured by a single correlation number estimated in calm markets — which is the standard critique of Gaussian-copula-style risk aggregation."},
+{id:"f18",cat:"fin",d:2,fmt:"num",q:"One-day 95% VaR for a normal P&L with mean 0 and sd 2%, in %?",ans:3.29,disp:"1.645σ ≈ 3.29%",sol:"z₀.₉₅ = 1.645 ⟹ VaR ≈ 3.29% of notional."},
+{id:"f19",cat:"fin",d:3,fmt:"open",q:"VaR vs Expected Shortfall — why did regulators move toward ES?",disp:"Tail-blind vs coherent",sol:"VaR is a quantile: it says nothing about how bad losses are <i>beyond</i> it, and it can fail subadditivity — a merged book can show more VaR than its parts, penalizing diversification. ES averages the tail beyond the quantile, is subadditive (coherent), and prices tail severity. Cost: it's harder to backtest, since it's not elicitable on its own."},
+{id:"f20",cat:"fin",d:2,fmt:"num",q:"CAPM: risk-free 3%, beta 1.2, equity risk premium 5%. Expected return in %?",ans:9,disp:"9%",sol:"3 + 1.2 × 5 = 9%."},
+{id:"f21",cat:"fin",d:3,fmt:"num",q:"PV of $100 per year for 3 years at 10% (first payment in one year)?",ans:100/1.1+100/1.21+100/1.331,disp:"≈ 248.69",sol:"90.91 + 82.64 + 75.13 ≈ 248.69. Or the annuity formula 100·(1 − 1.1⁻³)/0.1."},
+{id:"f22",cat:"fin",d:3,fmt:"open",q:"What is bond convexity and why is it valuable to the holder?",disp:"Curvature works for you",sol:"Convexity is the second-order sensitivity of price to yield: price rises more when yields fall than it drops when yields rise by the same amount. A convex position gains from rate volatility for a given duration — so, all else equal, higher convexity commands a lower yield. It's the fixed-income cousin of long gamma."},
+{id:"f23",cat:"fin",d:2,fmt:"num",q:"A straddle on a $100 stock costs $8. Breakeven move at expiry, in %?",ans:8,disp:"±8%",sol:"Payout |S_T − 100| must exceed the $8 premium ⟹ move beyond ±8. The market-implied 'expected move' quoted around earnings."},
+{id:"f24",cat:"fin",d:3,fmt:"open",q:"What is CVA, in one paragraph?",disp:"Price of counterparty default",sol:"Credit Valuation Adjustment is the market price of counterparty credit risk on a derivative: the expected loss from the counterparty defaulting while owing you money. Roughly ∫ EPE(t) × default probability density × (1 − recovery), discounted — expected positive exposure because you only lose when the trade is in your favor. It turns counterparty risk from a binary credit decision into a priced, hedgeable component of the trade, and it's the anchor of the wider XVA family (DVA, FVA, MVA, KVA)."}
+];
+const OLD_D={p1:1,p2:2,p3:2,p4:1,p5:2,p6:2,p7:1,p8:3,c1:1,c2:1,c3:2,c4:1,c5:1,c6:2,c7:2,c8:2,e1:1,e2:1,e3:2,e4:2,e5:2,e6:2,e7:3,e8:2,b1:2,b2:2,b3:2,b4:2,b5:1,b6:3,b7:2,b8:2,d1:1,d2:1,d3:2,d4:2,d5:1,d6:1,d7:3,d8:2,t1:2,t2:1,t3:2,t4:2,t5:2,t6:2,t7:2,t8:2};
+BANK.forEach(q=>{ if(!q.d) q.d=OLD_D[q.id]||2; });
+
+/* ---------------- app ---------------- */
+function App(){
+  const [st,setSt]=useState(loadState);
+  const [tab,setTab]=useState("drill");
+  const [view,setView]=useState("tabs"); // tabs | session | results
+  const [cfg,setCfg]=useState(null);
+  const [result,setResult]=useState(null);
+  useEffect(()=>{ saveState(st); },[st]);
+
+  const startSession=c=>{ setCfg(c); setView("session"); };
+  const endSession=res=>{
+    setResult(res);
+    setSt(s=>({...s,sessions:[...s.sessions,res].slice(-300)}));
+    setView("results");
+  };
+  const updateSettings=fn=>setSt(s=>({...s,settings:fn(s.settings)}));
+  const updateBank=(qid,ok)=>setSt(s=>{
+    const prev=s.bank[qid]||{tries:0,ok:false};
+    return {...s,bank:{...s.bank,[qid]:{tries:prev.tries+1,ok:!!ok,ts:Date.now()}}};
+  });
+
+  if(view==="session") return <SessionView cfg={cfg} settings={st.settings} onEnd={endSession} onQuit={()=>setView("tabs")} />;
+  if(view==="results") return <ResultsView res={result} onDone={()=>setView("tabs")} onAgain={()=>setView("session")} />;
+
+  return (
+    <div className="app">
+      <div className="screen">
+        {tab==="drill" && <DrillTab settings={st.settings} onStart={startSession} onSettings={updateSettings}/>}
+        {tab==="bank" && <BankTab bank={st.bank} onResult={updateBank}/>}
+        {tab==="stats" && <StatsTab sessions={st.sessions} bank={st.bank}/>}
+        {tab==="setup" && <SetupTab st={st} setSt={setSt} onSettings={updateSettings}/>}
+      </div>
+      <div className="tabbar"><div className="tabbar-inner">
+        {[["drill","Drill"],["bank","Bank"],["stats","Stats"],["setup","Setup"]].map(([id,label])=>
+          <button key={id} className={"tab"+(tab===id?" on":"")} onClick={()=>setTab(id)}>{label}<span className="dot"/></button>)}
+      </div></div>
+    </div>
+  );
+}
+
+/* ---------------- drill tab ---------------- */
+function DrillTab({settings,onStart,onSettings}){
+  const c=settings.custom;
+  const setC=patch=>onSettings(s=>({...s,custom:{...s.custom,...patch}}));
+  const opsOn=["add","sub","mul","div"].filter(o=>settings.ops[o]).length;
+  return (<div>
+    <div className="eyebrow">Mental Math</div>
+    <div className="h1">Drill</div>
+
+    <div className="card tap" onClick={()=>onStart({mode:"eighty",dur:480,count:80})}>
+      <div className="spread"><div className="cardtitle">80 in 8</div><div className="tag">MC · ±1</div></div>
+      <div className="cardsub">Optiver format. 80 multiple-choice questions, 8 minutes. +1 correct, −1 wrong, skip free. Mixed arithmetic, decimals, percentages, fractions, squares.</div>
+    </div>
+
+    <div className="card tap" onClick={()=>onStart({mode:"sprint",dur:settings.sprintDur})}>
+      <div className="spread"><div className="cardtitle">Sprint {settings.sprintDur}s</div><div className="tag">Typed</div></div>
+      <div className="cardsub">Zetamac format. Typed answers, auto-advance on correct, errors cost time not points. {opsOn}/4 operations on — ranges in Setup.</div>
+    </div>
+
+    <div className="card">
+      <div className="spread"><div className="cardtitle">Custom drill</div><div className="tag">Typed</div></div>
+      <div className="setrow"><span>Operation</span>
+        <select value={c.op} onChange={e=>setC({op:e.target.value})}>
+          <option value="add">Addition</option><option value="sub">Subtraction</option>
+          <option value="mul">Multiplication</option><option value="div">Division</option>
+        </select></div>
+      <div className="setrow"><span>Operand digits</span>
+        <div className="row">
+          <select value={c.dA} onChange={e=>setC({dA:+e.target.value})}>{[1,2,3,4].map(d=><option key={d} value={d}>{d}d</option>)}</select>
+          <span style={{color:"var(--faint)"}}>×</span>
+          <select value={c.dB} onChange={e=>setC({dB:+e.target.value})}>{[1,2,3,4].map(d=><option key={d} value={d}>{d}d</option>)}</select>
+        </div></div>
+      <div className="setrow"><span>Length</span>
+        <select value={c.mode+"_"+(c.mode==="time"?c.dur:c.count)} onChange={e=>{
+          const [m,v]=e.target.value.split("_"); setC({mode:m,[m==="time"?"dur":"count"]:+v});
+        }}>
+          <option value="time_60">60 seconds</option><option value="time_120">120 seconds</option>
+          <option value="count_20">20 questions</option><option value="count_50">50 questions</option>
+        </select></div>
+      <div style={{marginTop:10}}>
+        <button className="btn small" onClick={()=>onStart({mode:"custom",dur:c.mode==="time"?c.dur:null,count:c.mode==="count"?c.count:null,custom:{...c}})}>Start custom drill</button>
+      </div>
+    </div>
+  </div>);
+}
+
+/* ---------------- session ---------------- */
+function SessionView({cfg,settings,onEnd,onQuit}){
+  const genQ=()=>{
+    if(cfg.mode==="eighty") return genEighty();
+    if(cfg.mode==="custom") return genCustom(cfg.custom);
+    return genSprint(settings);
+  };
+  const [q,setQ]=useState(genQ);
+  const [val,setVal]=useState("");
+  const [tape,setTape]=useState([]);
+  const [n,setN]=useState(0);
+  const [now,setNow]=useState(Date.now());
+  const t0=useRef(Date.now());
+  const qT=useRef(Date.now());
+  const recs=useRef([]);
+  const inRef=useRef(null);
+  const done=useRef(false);
+
+  const elapsed=(now-t0.current)/1000;
+  const remaining=cfg.dur ? cfg.dur-elapsed : null;
+
+  useEffect(()=>{
+    const iv=setInterval(()=>setNow(Date.now()),200);
+    return ()=>clearInterval(iv);
+  },[]);
+  useEffect(()=>{
+    if(done.current) return;
+    const timeUp = cfg.dur && (Date.now()-t0.current)/1000 >= cfg.dur;
+    const countUp = cfg.count && n>=cfg.count;
+    if(timeUp||countUp){ done.current=true; finish(); }
+  },[now,n]);
+  useEffect(()=>{ if(inRef.current) inRef.current.focus(); },[q]);
+
+  function record(ok,given,skipped){
+    recs.current.push({text:q.text,ans:q.ans,given,ok,skipped:!!skipped,ms:Date.now()-qT.current,op:q.op});
+    setTape(t=>[...t,{ok:skipped?null:ok}].slice(-60));
+    setN(x=>x+1); setVal(""); qT.current=Date.now(); setQ(genQ());
+  }
+  function finish(){
+    const r=recs.current;
+    const correct=r.filter(x=>x.ok).length;
+    const wrong=r.filter(x=>!x.ok&&!x.skipped).length;
+    const skipped=r.filter(x=>x.skipped).length;
+    const score=cfg.mode==="eighty"?correct-wrong:correct;
+    const perOp={};
+    r.forEach(x=>{const p=perOp[x.op]||(perOp[x.op]={n:0,ok:0,ms:0});p.n++;if(x.ok)p.ok++;p.ms+=x.ms;});
+    onEnd({id:Date.now(),ts:Date.now(),mode:cfg.mode,score,attempted:r.length,correct,wrong,skipped,
+      dur:Math.round((Date.now()-t0.current)/1000),perOp,cfg,recs:r.slice(-100)});
+  }
+  function onType(v){
+    setVal(v);
+    const t=v.trim();
+    if(t!=="" && t!=="-" && Number(t)===q.ans) record(true,t,false);
+  }
+  function pickOpt(o){ record(o===q.ans,o,false); }
+  function skip(){ record(false,null,true); }
+
+  const scoreNow = cfg.mode==="eighty"
+    ? recs.current.filter(x=>x.ok).length - recs.current.filter(x=>!x.ok&&!x.skipped).length
+    : recs.current.filter(x=>x.ok).length;
+
+  return (<div className="app"><div className="sess">
+    <div className="tape">{tape.length===0
+      ? <span className="tick flat">— tape —</span>
+      : tape.map((t,i)=><span key={i} className={"tick "+(t.ok===null?"flat":t.ok?"up":"down")}>{t.ok===null?"─":t.ok?"▲":"▼"}</span>)}</div>
+    <div className="sesshead">
+      <div className={"clock"+(remaining!==null&&remaining<=10?" low":"")}>
+        {remaining!==null ? fmtClock(remaining) : fmtClock(elapsed)}
+      </div>
+      <div className="score">{cfg.count?`Q ${Math.min(n+1,cfg.count)}/${cfg.count} · `:""}SCORE {scoreNow}</div>
+    </div>
+    <div className="qzone">
+      <div className="qtext">{q.text} <small>=</small></div>
+      {cfg.mode==="eighty"
+        ? <div className="opts">{q.opts.map((o,i)=><button key={i} className="opt" onClick={()=>pickOpt(o)}>{fmtN(o)}</button>)}</div>
+        : <input ref={inRef} className="ansin" value={val} inputMode="decimal" autoComplete="off" autoCorrect="off"
+            onChange={e=>onType(e.target.value)} placeholder="—"/>}
+      <button className="skip" onClick={skip}>Skip</button>
+    </div>
+    <button className="btn ghost small" onClick={onQuit}>Abandon session</button>
+  </div></div>);
+}
+
+/* ---------------- results ---------------- */
+const MODENAMES={eighty:"80 in 8",sprint:"Sprint",custom:"Custom drill"};
+function ResultsView({res,onDone,onAgain}){
+  const acc=res.attempted?Math.round(100*res.correct/res.attempted):0;
+  const avg=res.attempted?(Object.values(res.perOp).reduce((a,p)=>a+p.ms,0)/res.attempted/1000).toFixed(1):"—";
+  return (<div className="app"><div className="screen">
+    <div className="eyebrow">{MODENAMES[res.mode]} · {fmtClock(res.dur)}</div>
+    <div className="bigscore">{res.score}</div>
+    <div style={{textAlign:"center",color:"var(--faint)",fontSize:11,letterSpacing:".18em",textTransform:"uppercase"}}>Score</div>
+    <div className="statgrid">
+      <div className="stat"><div className="v">{res.correct}</div><div className="k">Correct</div></div>
+      <div className="stat"><div className="v">{res.wrong}</div><div className="k">Wrong</div></div>
+      <div className="stat"><div className="v">{res.skipped}</div><div className="k">Skipped</div></div>
+      <div className="stat"><div className="v">{acc}%</div><div className="k">Accuracy</div></div>
+      <div className="stat"><div className="v">{avg}s</div><div className="k">Avg / Q</div></div>
+      <div className="stat"><div className="v">{res.attempted}</div><div className="k">Attempted</div></div>
+    </div>
+    <div className="chartbox"><div className="charttitle">By operation</div>
+      {Object.entries(res.perOp).map(([op,p])=>
+        <div className="barrow" key={op}>
+          <span className="barlabel">{op}</span>
+          <div className="bartrack"><div className="barfill" style={{width:(p.n?Math.round(100*p.ok/p.n):0)+"%"}}/></div>
+          <span className="barval">{p.ok}/{p.n} · {(p.ms/p.n/1000).toFixed(1)}s</span>
+        </div>)}
+    </div>
+    {res.recs.some(r=>!r.ok&&!r.skipped) && <div className="chartbox"><div className="charttitle">Misses</div>
+      {res.recs.filter(r=>!r.ok&&!r.skipped).slice(-12).map((r,i)=>
+        <div key={i} style={{fontSize:12,padding:"4px 0",color:"var(--dim)"}}>
+          {r.text} = <span style={{color:"var(--up)"}}>{fmtN(r.ans)}</span>
+          {r.given!=null && <span style={{color:"var(--down)"}}> (you: {fmtN(Number(r.given))})</span>}
+        </div>)}
+    </div>}
+    <button className="btn" onClick={onAgain} style={{marginBottom:8}}>Run it again</button>
+    <button className="btn ghost" onClick={onDone}>Done</button>
+  </div></div>);
+}
+
+/* ---------------- bank ---------------- */
+const DIFFN={1:"Easy",2:"Med",3:"Hard"};
+function BankTab({bank,onResult}){
+  const [cat,setCat]=useState(null);
+  const [qi,setQi]=useState(null);
+  const [diff,setDiff]=useState(0);
+  const filt=q=>q.cat===cat && (!diff || q.d===diff);
+  if(cat && qi!==null){
+    const qs=BANK.filter(filt);
+    return <BankQ q={qs[qi]} idx={qi} total={qs.length} bank={bank} onResult={onResult}
+      onNav={d=>setQi(Math.max(0,Math.min(qs.length-1,qi+d)))} onBack={()=>setQi(null)}/>;
+  }
+  if(cat){
+    const qs=BANK.filter(filt);
+    const cname=CATS.find(c=>c.id===cat).name;
+    return (<div>
+      <button className="skip" style={{padding:"0 0 8px"}} onClick={()=>{setCat(null);setDiff(0);}}>← Categories</button>
+      <div className="h1">{cname}</div>
+      <div className="chips">{[[0,"All"],[1,"Easy"],[2,"Med"],[3,"Hard"]].map(([v,l])=>
+        <button key={v} className={"chip"+(diff===v?" on":"")} onClick={()=>{setDiff(v);setQi(null);}}>{l}</button>)}</div>
+      {qs.length===0 && <div className="empty">No questions at this difficulty here.</div>}
+      {qs.map((q,i)=>{
+        const p=bank[q.id];
+        return <div key={q.id} className="card tap" onClick={()=>setQi(i)}>
+          <div className="row">
+            <span className={"qdot"+(p?(p.ok?" ok":" bad"):"")}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,lineHeight:1.5}}>{q.q}</div>
+              <div className="cardsub">{DIFFN[q.d]} · {q.fmt==="mc"?"Multiple choice":q.fmt==="num"?"Numeric answer":"Open response"}{p?` · ${p.tries} attempt${p.tries>1?"s":""}`:""}</div>
+            </div>
+          </div>
+        </div>;})}
+    </div>);
+  }
+  return (<div>
+    <div className="eyebrow">Probability & Statistics</div>
+    <div className="h1">Question Bank</div>
+    {CATS.map(c=>{
+      const qs=BANK.filter(b=>b.cat===c.id);
+      const solved=qs.filter(q=>bank[q.id]&&bank[q.id].ok).length;
+      return <div key={c.id} className="card tap" onClick={()=>setCat(c.id)}>
+        <div className="spread"><div className="cardtitle">{c.name}</div><div className="tag">{solved}/{qs.length}</div></div>
+        <div style={{marginTop:8}} className="bartrack"><div className="barfill" style={{width:(100*solved/qs.length)+"%"}}/></div>
+      </div>;})}
+  </div>);
+}
+function BankQ({q,idx,total,bank,onResult,onNav,onBack}){
+  const [picked,setPicked]=useState(null);
+  const [val,setVal]=useState("");
+  const [checked,setChecked]=useState(null); // true/false for num
+  const [revealed,setRevealed]=useState(false);
+  useEffect(()=>{ setPicked(null); setVal(""); setChecked(null); setRevealed(false); },[q.id]);
+  const answered = q.fmt==="mc" ? picked!==null : q.fmt==="num" ? checked!==null : revealed;
+  return (<div>
+    <button className="skip" style={{padding:"0 0 8px"}} onClick={onBack}>← Back</button>
+    <div className="spread"><div className="eyebrow">{CATS.find(c=>c.id===q.cat).name} · {DIFFN[q.d]}</div>
+      <div className="eyebrow">{idx+1} / {total}</div></div>
+    <div className="prompt">{q.q}</div>
+
+    {q.fmt==="mc" && q.opts.map((o,i)=>{
+      let cls="mcopt";
+      if(picked!==null){ if(i===q.ans) cls+=" right"; else if(i===picked) cls+=" wrongpick"; }
+      return <button key={i} className={cls} disabled={picked!==null}
+        onClick={()=>{setPicked(i); onResult(q.id, i===q.ans);}}>{String.fromCharCode(65+i)}. {o}</button>;})}
+
+    {q.fmt==="num" && <div>
+      <div className="row">
+        <input style={{flex:1}} inputMode="text" placeholder="e.g. 0.25 or 1/4" value={val}
+          onChange={e=>setVal(e.target.value)} disabled={checked!==null}/>
+        <button className="btn small" style={{width:"auto",padding:"9px 16px"}} disabled={checked!==null||!val.trim()}
+          onClick={()=>{const ok=numMatch(val,q.ans); setChecked(ok); onResult(q.id,ok);}}>Check</button>
+      </div>
+      {checked!==null && <div className={"verdict "+(checked?"ok":"bad")}>
+        {checked?"Correct":"Wrong"} — answer: {q.disp}</div>}
+    </div>}
+
+    {q.fmt==="open" && !revealed &&
+      <button className="btn ghost" onClick={()=>setRevealed(true)}>Show solution</button>}
+    {q.fmt==="open" && revealed && picked===null &&
+      <div className="row" style={{marginTop:10}}>
+        <button className="btn small" style={{flex:1}} onClick={()=>{setPicked(1);onResult(q.id,true);}}>Had it</button>
+        <button className="btn small ghost" style={{flex:1}} onClick={()=>{setPicked(0);onResult(q.id,false);}}>Missed it</button>
+      </div>}
+
+    {answered && <div className="sol">
+      {q.fmt==="open" && <div style={{color:"var(--amber)",fontWeight:700,marginBottom:6}}>{q.disp}</div>}
+      <span dangerouslySetInnerHTML={{__html:q.sol}}/>
+    </div>}
+
+    <div className="row" style={{marginTop:16}}>
+      <button className="btn ghost small" style={{flex:1}} disabled={idx===0} onClick={()=>onNav(-1)}>← Prev</button>
+      <button className="btn ghost small" style={{flex:1}} disabled={idx===total-1} onClick={()=>onNav(1)}>Next →</button>
+    </div>
+  </div>);
+}
+
+/* ---------------- stats ---------------- */
+function LineChart({data}){
+  if(data.length<2) return <div className="empty">Need at least two sessions for a trend.</div>;
+  const W=320,H=110,P=8;
+  const min=Math.min(...data), max=Math.max(...data);
+  const span=(max-min)||1;
+  const px=i=>P+(W-2*P)*i/(data.length-1);
+  const py=v=>H-P-(H-2*P)*(v-min)/span;
+  const path=data.map((v,i)=>(i?"L":"M")+px(i).toFixed(1)+" "+py(v).toFixed(1)).join(" ");
+  return (<div>
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block"}}>
+      <path d={path} fill="none" stroke="var(--amber)" strokeWidth="2"/>
+      {data.map((v,i)=><circle key={i} cx={px(i)} cy={py(v)} r="2.6" fill="var(--amber)"/>)}
+    </svg>
+    <div className="spread" style={{fontSize:10,color:"var(--faint)"}}>
+      <span>min {min}</span><span>latest {data[data.length-1]}</span><span>max {max}</span>
+    </div>
+  </div>);
+}
+function StatsTab({sessions,bank}){
+  const [mode,setMode]=useState("sprint");
+  const ss=sessions.filter(s=>s.mode===mode);
+  const scores=ss.slice(-30).map(s=>s.score);
+  const best=ss.length?Math.max(...ss.map(s=>s.score)):"—";
+  const totalQ=sessions.reduce((a,s)=>a+s.attempted,0);
+  const agg={};
+  ss.forEach(s=>Object.entries(s.perOp||{}).forEach(([op,p])=>{
+    const a=agg[op]||(agg[op]={n:0,ok:0,ms:0}); a.n+=p.n; a.ok+=p.ok; a.ms+=p.ms;}));
+  const bankSolved=BANK.filter(q=>bank[q.id]&&bank[q.id].ok).length;
+  return (<div>
+    <div className="eyebrow">Performance</div>
+    <div className="h1">Stats</div>
+    <div className="chips">{[["sprint","Sprint"],["eighty","80 in 8"],["custom","Custom"]].map(([id,l])=>
+      <button key={id} className={"chip"+(mode===id?" on":"")} onClick={()=>setMode(id)}>{l}</button>)}</div>
+    <div className="statgrid">
+      <div className="stat"><div className="v">{ss.length}</div><div className="k">Sessions</div></div>
+      <div className="stat"><div className="v">{best}</div><div className="k">Best</div></div>
+      <div className="stat"><div className="v">{totalQ}</div><div className="k">Total Qs</div></div>
+    </div>
+    <div className="chartbox"><div className="charttitle">Score — last {scores.length} sessions</div>
+      <LineChart data={scores}/></div>
+    <div className="chartbox"><div className="charttitle">Accuracy & speed by operation</div>
+      {Object.keys(agg).length===0
+        ? <div className="empty">No sessions in this mode yet.</div>
+        : Object.entries(agg).map(([op,p])=>
+        <div className="barrow" key={op}>
+          <span className="barlabel">{op}</span>
+          <div className="bartrack"><div className="barfill" style={{width:Math.round(100*p.ok/p.n)+"%"}}/></div>
+          <span className="barval">{Math.round(100*p.ok/p.n)}% · {(p.ms/p.n/1000).toFixed(1)}s</span>
+        </div>)}
+    </div>
+    <div className="chartbox"><div className="charttitle">Bank mastery — {bankSolved}/{BANK.length}</div>
+      {CATS.map(c=>{
+        const qs=BANK.filter(b=>b.cat===c.id);
+        const ok=qs.filter(q=>bank[q.id]&&bank[q.id].ok).length;
+        return <div className="barrow" key={c.id}>
+          <span className="barlabel" style={{width:90,textTransform:"none",letterSpacing:0}}>{c.name.split(" ")[0]}</span>
+          <div className="bartrack"><div className="barfill" style={{width:(100*ok/qs.length)+"%"}}/></div>
+          <span className="barval">{ok}/{qs.length}</span>
+        </div>;})}
+    </div>
+  </div>);
+}
+
+/* ---------------- setup ---------------- */
+function Range({v,onChange}){
+  return (<div className="row">
+    <input className="rangein" inputMode="numeric" value={v[0]} onChange={e=>onChange([+e.target.value||0,v[1]])}/>
+    <span style={{color:"var(--faint)"}}>–</span>
+    <input className="rangein" inputMode="numeric" value={v[1]} onChange={e=>onChange([v[0],+e.target.value||0])}/>
+  </div>);
+}
+function Switch({on,onToggle}){
+  return <button className={"switch"+(on?" on":"")} onClick={onToggle}><span className="knob"/></button>;
+}
+function SetupTab({st,setSt,onSettings}){
+  const s=st.settings;
+  const set=patch=>onSettings(x=>({...x,...patch}));
+  const doExport=()=>{
+    const blob=new Blob([JSON.stringify(st,null,1)],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="pit-data.json"; a.click();
+  };
+  const doImport=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ setSt(JSON.parse(r.result)); }catch(err){ alert("Invalid file"); } };
+    r.readAsText(f);
+  };
+  const doReset=()=>{ if(confirm("Wipe all sessions, bank progress and settings?")){ localStorage.removeItem(LS); setSt(loadState()); } };
+  return (<div>
+    <div className="eyebrow">Configuration</div>
+    <div className="h1">Setup</div>
+    <div className="card">
+      <div className="cardtitle" style={{marginBottom:4}}>Sprint</div>
+      <div className="setrow"><span>Duration</span>
+        <select value={s.sprintDur} onChange={e=>set({sprintDur:+e.target.value})}>
+          {[30,60,120,300].map(d=><option key={d} value={d}>{d}s</option>)}
+        </select></div>
+      <div className="setrow"><span>Addition</span><Switch on={s.ops.add} onToggle={()=>set({ops:{...s.ops,add:!s.ops.add}})}/></div>
+      <div className="setrow"><span style={{color:"var(--dim)",fontSize:12}}>Addend A range</span><Range v={s.addA} onChange={v=>set({addA:v})}/></div>
+      <div className="setrow"><span style={{color:"var(--dim)",fontSize:12}}>Addend B range</span><Range v={s.addB} onChange={v=>set({addB:v})}/></div>
+      <div className="setrow"><span>Subtraction <span style={{color:"var(--faint)"}}>(inverse)</span></span><Switch on={s.ops.sub} onToggle={()=>set({ops:{...s.ops,sub:!s.ops.sub}})}/></div>
+      <div className="setrow"><span>Multiplication</span><Switch on={s.ops.mul} onToggle={()=>set({ops:{...s.ops,mul:!s.ops.mul}})}/></div>
+      <div className="setrow"><span style={{color:"var(--dim)",fontSize:12}}>Factor A range</span><Range v={s.mulA} onChange={v=>set({mulA:v})}/></div>
+      <div className="setrow"><span style={{color:"var(--dim)",fontSize:12}}>Factor B range</span><Range v={s.mulB} onChange={v=>set({mulB:v})}/></div>
+      <div className="setrow"><span>Division <span style={{color:"var(--faint)"}}>(inverse)</span></span><Switch on={s.ops.div} onToggle={()=>set({ops:{...s.ops,div:!s.ops.div}})}/></div>
+    </div>
+    <div className="card">
+      <div className="cardtitle" style={{marginBottom:8}}>Data</div>
+      <button className="btn ghost small" style={{marginBottom:8}} onClick={doExport}>Export data (JSON)</button>
+      <label className="btn ghost small" style={{marginBottom:8,display:"block"}}>Import data
+        <input type="file" accept="application/json" style={{display:"none"}} onChange={doImport}/></label>
+      <button className="btn ghost small" style={{color:"var(--down)"}} onClick={doReset}>Reset everything</button>
+    </div>
+    <div className="cardsub" style={{textAlign:"center"}}>PIT · sessions and bank progress live in localStorage on this device.</div>
+  </div>);
+}
+
+if (typeof window!=="undefined") window.__pit={genSprint,genEighty,genCustom,numMatch,parseAns,BANK,DEFAULTS,distractors};
+if (typeof document!=="undefined" && document.getElementById("root")){
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+}
+</script>
+</body>
+</html>
